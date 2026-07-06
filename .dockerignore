@@ -1,0 +1,37 @@
+**/__pycache__
+**/*.py[cod]
+**/*.egg-info
+**/dist
+**/build
+**/.eggs
+**/.venv
+**/venv
+
+# Test artifacts
+**/.pytest_cache
+**/.coverage
+**/coverage_html
+**/.mypy_cache
+**/.ruff_cache
+
+# Frontend build artifacts
+frontend/node_modules
+frontend/dist
+frontend/.next
+
+# Secrets — never in Docker context
+.env
+**/*.key
+**/*.pem
+**/*.crt
+docker/nginx/ssl/
+
+# Runtime output dirs
+**/plugin_output/
+**/reports_output/
+**/logs/
+
+# Editor
+.idea/
+.vscode/
+**/.DS_Store
