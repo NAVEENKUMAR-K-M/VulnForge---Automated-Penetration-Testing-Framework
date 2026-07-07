@@ -271,7 +271,11 @@ class WorkspaceRepository(BaseRepository[Workspace, dict, dict]):
         Returns:
             WorkspaceMember: The updated membership record.
         """
-        return await self.update_fields(membership, role=new_role)
+        membership.role = new_role
+        self._session.add(membership)
+        await self._session.flush()
+        await self._session.refresh(membership)
+        return membership
 
     async def remove_member(self, membership: WorkspaceMember) -> None:
         """Remove a user from a workspace.
