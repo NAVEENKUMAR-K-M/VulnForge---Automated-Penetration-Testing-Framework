@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from app.models.vulnerability import Vulnerability
     from app.models.scan_plugin_execution import ScanPluginExecution
     from app.models.report import Report
+    from app.models.workspace import Workspace
 
 
 class ScanStatus(str, enum.Enum):
@@ -206,6 +207,17 @@ class Scan(TimestampedBase):
         nullable=True,
         doc="Celery task ID used to monitor, cancel, or retry this scan.",
     )
+    workspace_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "workspaces.id",
+            ondelete="SET NULL",
+            name="fk_scans_workspace",
+        ),
+        nullable=True,
+        index=True,
+        doc="FK to the workspace/engagement this scan belongs to. NULL for ungrouped scans.",
+    )
 
     # ── Relationships ─────────────────────────────────────────────────────────
     target: Mapped[Target] = relationship(
@@ -240,6 +252,11 @@ class Scan(TimestampedBase):
     reports: Mapped[list[Report]] = relationship(
         "Report",
         secondary="report_scans",
+        back_populates="scans",
+        lazy="select",
+    )
+    workspace: Mapped[Workspace | None] = relationship(
+        "Workspace",
         back_populates="scans",
         lazy="select",
     )

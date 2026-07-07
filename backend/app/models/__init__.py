@@ -31,6 +31,12 @@ from app.models.vulnerability_reference import VulnerabilityReference, Reference
 from app.models.vulnerability_note import VulnerabilityNote
 from app.models.report import Report, ReportFormat, ReportStatus, ReportType
 from app.models.audit_log import AuditLog, AuditOutcome
+from app.models.workspace import (
+    Workspace,
+    WorkspaceMember,
+    WorkspaceMemberRole,
+    WorkspaceStatus,
+)
 
 __all__ = [
     # Base
@@ -68,4 +74,9 @@ __all__ = [
     "ReportType",
     "AuditLog",
     "AuditOutcome",
+    # Workspace
+    "Workspace",
+    "WorkspaceMember",
+    "WorkspaceMemberRole",
+    "WorkspaceStatus",
 ]

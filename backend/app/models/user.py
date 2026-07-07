@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from app.models.user_session import UserSession
     from app.models.vulnerability_note import VulnerabilityNote
     from app.models.audit_log import AuditLog
+    from app.models.workspace import Workspace, WorkspaceMember
 
 
 class UserRole(str, enum.Enum):
@@ -190,6 +191,18 @@ class User(TimestampedBase):
     audit_logs: Mapped[list[AuditLog]] = relationship(
         "AuditLog",
         back_populates="actor",
+        lazy="select",
+    )
+    owned_workspaces: Mapped[list[Workspace]] = relationship(
+        "Workspace",
+        foreign_keys="Workspace.owner_id",
+        back_populates="owner",
+        lazy="select",
+    )
+    workspace_memberships: Mapped[list[WorkspaceMember]] = relationship(
+        "WorkspaceMember",
+        foreign_keys="WorkspaceMember.user_id",
+        back_populates="user",
         lazy="select",
     )
 

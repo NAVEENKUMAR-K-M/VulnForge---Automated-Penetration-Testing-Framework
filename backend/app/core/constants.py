@@ -74,6 +74,16 @@ class AuditAction:
     REPORT_CREATED: str = "report.created"
     REPORT_DOWNLOADED: str = "report.downloaded"
 
+    # Workspaces
+    WORKSPACE_CREATED: str = "workspace.created"
+    WORKSPACE_UPDATED: str = "workspace.updated"
+    WORKSPACE_ARCHIVED: str = "workspace.archived"
+    WORKSPACE_RESTORED: str = "workspace.restored"
+    WORKSPACE_DELETED: str = "workspace.deleted"
+    WORKSPACE_MEMBER_ADDED: str = "workspace.member.added"
+    WORKSPACE_MEMBER_REMOVED: str = "workspace.member.removed"
+    WORKSPACE_MEMBER_ROLE_CHANGED: str = "workspace.member.role_changed"
+
 
 # ── Role Hierarchy ────────────────────────────────────────────────────────────
 
@@ -111,3 +121,4 @@ API_SCANS_TAG: str = "scans"
 API_VULNERABILITIES_TAG: str = "vulnerabilities"
 API_REPORTS_TAG: str = "reports"
 API_PLUGINS_TAG: str = "plugins"
+API_WORKSPACES_TAG: str = "workspaces"
