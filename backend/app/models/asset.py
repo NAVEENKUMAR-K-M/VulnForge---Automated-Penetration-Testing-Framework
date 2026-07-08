@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import enum
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Boolean, Enum, ForeignKey, Index, String, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -97,6 +97,14 @@ class DiscoveredAsset(TimestampedBase):
         default=list,
         server_default=text("'[]'::jsonb"),
         doc="Array of plugin names that reported this asset.",
+    )
+    metadata_dict: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",
+        JSONB,
+        nullable=False,
+        default=dict,
+        server_default=text("'{}'::jsonb"),
+        doc="Arbitrary key-value metadata (e.g., status codes, titles, tech stack).",
     )
     is_active: Mapped[bool] = mapped_column(
         Boolean,

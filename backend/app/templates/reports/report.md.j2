@@ -1,0 +1,104 @@
+# Security Assessment Report
+
+**Workspace:** {{ workspace.name }}
+**Date Generated:** {{ date }}
+
+## 1. Executive Summary
+
+This report outlines the findings and assets discovered during the security assessment of **{{ workspace.name }}**.
+
+- **Total Assets Discovered:** {{ assets|length }}
+- **Total Vulnerabilities Identified:** {{ vulnerabilities|length }}
+- **Critical / High Findings:** {{ critical_high_count }}
+
+---
+
+## 2. Discovered Assets
+
+| Type | Value | Source Tools | Metadata |
+|---|---|---|---|
+{% for asset in assets %}
+| {{ asset.asset_type.value }} | `{{ asset.value }}` | {{ asset.source_tools|join(', ') }} | {% if asset.metadata_dict %}{{ asset.metadata_dict|tojson }}{% endif %} |
+{% endfor %}
+
+---
+
+## 3. Technologies Identified
+
+{% if technologies %}
+| Asset | Category | Technologies |
+|---|---|---|
+{% for tech in technologies %}
+| `{{ tech.asset }}` | {{ tech.category }} | {{ tech.items|join(', ') }} |
+{% endfor %}
+{% else %}
+*No specific technologies identified.*
+{% endif %}
+
+---
+
+## 4. Open Ports & Services
+
+{% if ports %}
+| Host | Port | Service | Version | OS |
+|---|---|---|---|---|
+{% for p in ports %}
+| `{{ p.host }}` | {{ p.port }} | {{ p.service }} | {{ p.version }} | {{ p.os }} |
+{% endfor %}
+{% else %}
+*No open ports specifically identified via Nmap metadata.*
+{% endif %}
+
+---
+
+## 5. Vulnerability Findings
+
+{% if vulnerabilities %}
+{% for vuln in vulnerabilities %}
+### 5.{{ loop.index }}. {{ vuln.title }}
+
+**Severity:** {{ vuln.severity.value|upper }} 
+{% if vuln.cvss_score %}**CVSS:** {{ vuln.cvss_score }} ({{ vuln.cvss_vector }}){% endif %}
+{% if vuln.cve_id %}**CVE:** {{ vuln.cve_id }}{% endif %}
+{% if vuln.cwe_id %}**CWE:** {{ vuln.cwe_id }}{% endif %}
+**Status:** {{ vuln.status.value|title }}
+
+**Description:**
+{{ vuln.description }}
+
+**Affected Asset:** `{{ vuln.affected_host or 'N/A' }}{% if vuln.affected_path %}{{ vuln.affected_path }}{% endif %}`
+
+{% if vuln.proof_of_concept %}
+**Proof of Concept:**
+{{ vuln.proof_of_concept }}
+{% endif %}
+
+{% if vuln.remediation %}
+**Remediation:**
+{{ vuln.remediation }}
+{% endif %}
+
+{% if vuln.references %}
+**References:**
+{% for ref in vuln.references %}
+- [{{ ref.url }}]({{ ref.url }})
+{% endfor %}
+{% endif %}
+---
+{% endfor %}
+{% else %}
+*No vulnerabilities identified.*
+{% endif %}
+
+---
+
+## 6. Visual Evidence (Screenshots)
+
+{% if screenshots %}
+{% for screenshot in screenshots %}
+### {{ screenshot.asset }}
+*(Screenshot stored at: `{{ screenshot.path }}`)*
+{% endfor %}
+{% else %}
+*No screenshots captured.*
+{% endif %}

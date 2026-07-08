@@ -62,6 +62,9 @@ alembic.ini.local
 /tmp/
 plugin_output/
 reports_output/
+# ── Temp Scripts ──────────────────────────────────────────────────────────────
+enrich_docs.py
+generate_openapi.py
 
 # ── Logs ──────────────────────────────────────────────────────────────────────
 *.log

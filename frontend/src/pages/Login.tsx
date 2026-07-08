@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { ShieldAlert, LogIn } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -70,6 +70,7 @@ export const Login: React.FC = () => {
               <div className="flex-col gap-2">
                 <div className="flex-row justify-between items-center">
                   <label className="text-sm font-medium text-secondary">Password</label>
+                  <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none' }}>Forgot password?</Link>
                 </div>
                 <input 
                   type="password" 
@@ -86,6 +87,12 @@ export const Login: React.FC = () => {
             </form>
           </CardBody>
         </Card>
+        
+        <div style={{ textAlign: 'center', marginTop: 'var(--space-4)' }}>
+          <p className="text-secondary text-sm">
+            Don't have an account? <Link to="/register" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Sign up here</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

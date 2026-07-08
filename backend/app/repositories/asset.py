@@ -58,6 +58,7 @@ class AssetRepository(BaseRepository[DiscoveredAsset, dict, dict]):
                 "asset_type": a.asset_type,
                 "value": a.value,
                 "source_tools": [a.source_tool],
+                "metadata": a.metadata,
             })
 
         # Create the PostgreSQL insert statement
@@ -89,6 +90,7 @@ class AssetRepository(BaseRepository[DiscoveredAsset, dict, dict]):
             constraint="uq_discovered_assets_workspace_value_type",
             set_={
                 "source_tools": merge_tools_expr,
+                "metadata": DiscoveredAsset.metadata_dict.op('||')(stmt.excluded.metadata),
                 "updated_at": func.now(),
                 # We do not override scan_id because scan_id tracks the *first* scan that found it.
             }

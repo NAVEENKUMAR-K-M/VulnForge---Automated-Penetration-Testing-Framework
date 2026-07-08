@@ -14,7 +14,7 @@ export const ScanProfiles: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [profileType, setProfileType] = useState('CUSTOM');
+  const [profileType, setProfileType] = useState('custom');
 
   const fetchProfiles = async () => {
     setIsLoading(true);
@@ -48,6 +48,27 @@ export const ScanProfiles: React.FC = () => {
     } catch (err) {
       console.error(err);
       alert('Failed to create profile');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this profile?")) return;
+    try {
+      await scanProfilesApi.delete(id);
+      await fetchProfiles();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete profile');
+    }
+  };
+
+  const handleClone = async (id: string, name: string) => {
+    try {
+      await scanProfilesApi.clone(id, { name: `${name} (Copy)` });
+      await fetchProfiles();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to clone profile');
     }
   };
 
@@ -90,6 +111,10 @@ export const ScanProfiles: React.FC = () => {
                 </div>
                 <div className="flex-row gap-2 mt-4 pt-4" style={{ borderTop: '1px solid var(--border-color)' }}>
                   <Button variant="secondary" size="sm" style={{ flex: 1 }}>Edit Configuration</Button>
+                  <Button variant="ghost" size="sm" onClick={() => handleClone(profile.id, profile.name)}>Clone</Button>
+                  {!profile.is_default && (
+                    <Button variant="danger" size="sm" onClick={() => handleDelete(profile.id)}>Delete</Button>
+                  )}
                 </div>
               </CardBody>
             </Card>
@@ -116,9 +141,9 @@ export const ScanProfiles: React.FC = () => {
                 <div className="flex-col gap-2">
                   <label className="text-sm font-medium">Type</label>
                   <select className="glass-input" value={profileType} onChange={e => setProfileType(e.target.value)}>
-                    <option value="CUSTOM">Custom</option>
-                    <option value="QUICK_RECON">Quick Recon</option>
-                    <option value="EXTERNAL_ASSESSMENT">External Assessment</option>
+                    <option value="custom">Custom</option>
+                    <option value="quick_recon">Quick Recon</option>
+                    <option value="external_assessment">External Assessment</option>
                   </select>
                 </div>
                 <div className="flex-col gap-2">

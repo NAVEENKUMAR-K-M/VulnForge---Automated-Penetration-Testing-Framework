@@ -48,6 +48,7 @@ class ReportFormat(str, enum.Enum):
     HTML = "html"
     PDF = "pdf"
     JSON = "json"
+    MARKDOWN = "markdown"
 
 
 class ReportStatus(str, enum.Enum):

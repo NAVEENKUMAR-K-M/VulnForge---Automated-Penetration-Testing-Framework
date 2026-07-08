@@ -3,12 +3,12 @@ import { fetchApi } from './client';
 export interface ReconAsset {
   id: string;
   workspace_id: string;
-  asset_value: string;
+  value: string;
   asset_type: string;
-  source_tool: string;
-  first_seen: string;
-  last_seen: string;
-  metadata: Record<string, any>;
+  source_tools: string[];
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, any>;
 }
 
 export const assetsApi = {
@@ -16,4 +16,10 @@ export const assetsApi = {
     const res = await fetchApi<{ items: ReconAsset[] }>(`/workspaces/${workspaceId}/assets/?skip=${skip}&limit=${limit}`);
     return res.items;
   },
+
+  delete: async (workspaceId: string, assetId: string): Promise<void> => {
+    return fetchApi<void>(`/workspaces/${workspaceId}/assets/${assetId}`, {
+      method: 'DELETE',
+    });
+  }
 };

@@ -182,41 +182,50 @@ class TargetService:
         )
 
         # Uniqueness check: same value + same type = duplicate
-        if await self._target_repo.value_exists(data.value, data.target_type):
-            raise ConflictError(
-                f"A {data.target_type.value} target with value '{data.value}' "
-                f"already exists. Each value+type combination must be unique."
+        target = await self._target_repo.get_by_value(data.value, data.target_type)
+        if target:
+            logger.info(
+                "target.create.reused",
+                target_id=str(target.id),
+                target_type=data.target_type.value,
+                value=data.value,
+            )
+        else:
+            target = await self._target_repo.create_from_dict(
+                {
+                    "name": data.name,
+                    "target_type": data.target_type,
+                    "value": data.value,
+                    "description": data.description,
+                    "scope_notes": data.scope_notes,
+                    "is_active": True,
+                    "created_by_id": current_user.id,
+                }
             )
 
-        target = await self._target_repo.create_from_dict(
-            {
-                "name": data.name,
-                "target_type": data.target_type,
-                "value": data.value,
-                "description": data.description,
-                "scope_notes": data.scope_notes,
-                "is_active": True,
-                "created_by_id": current_user.id,
-            }
-        )
+            # Add tags atomically with the target creation
+            if data.tags:
+                await self._target_repo.replace_tags(target.id, data.tags)
 
-        # Add tags atomically with the target creation
-        if data.tags:
-            await self._target_repo.replace_tags(target.id, data.tags)
+            await self._audit_repo.create_entry(
+                action=AuditAction.TARGET_CREATED,
+                outcome=AuditOutcome.SUCCESS,
+                actor_id=current_user.id,
+                actor_ip=ip_address,
+                resource_type="target",
+                resource_id=target.id,
+                details={
+                    "target_type": data.target_type.value,
+                    "value": data.value,
+                    "tags": data.tags,
+                },
+            )
 
-        await self._audit_repo.create_entry(
-            action=AuditAction.TARGET_CREATED,
-            outcome=AuditOutcome.SUCCESS,
-            actor_id=current_user.id,
-            actor_ip=ip_address,
-            resource_type="target",
-            resource_id=target.id,
-            details={
-                "target_type": data.target_type.value,
-                "value": data.value,
-                "tags": data.tags,
-            },
-        )
+        if data.workspace_id:
+            await self._target_repo.link_to_workspace(target.id, data.workspace_id)
+
+        # Ensure all relationships like tags are loaded
+        target = await self._target_repo.get(target.id)
 
         logger.info(
             "target.create.success",

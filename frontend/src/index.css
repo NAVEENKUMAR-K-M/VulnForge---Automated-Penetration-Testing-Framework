@@ -1,4 +1,18 @@
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+@theme {
+  --color-base: #0B0E14;
+  --color-surface: rgba(22, 27, 34, 0.6);
+  --color-surface-solid: #161b22;
+  --color-primary: #3b82f6;
+  --color-success: #2ea043;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Outfit', 'Inter', sans-serif;
+}
 
 :root {
   /* Colors - Core Dark Theme */

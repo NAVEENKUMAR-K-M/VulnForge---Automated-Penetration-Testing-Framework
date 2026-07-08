@@ -1,0 +1,5911 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "VulnForge API",
+    "description": "**VulnForge** \u2014 Automated Penetration Testing Framework.\n\nAll endpoints require authentication via JWT Bearer tokens unless explicitly marked as public.\n\nObtain tokens via `POST /api/v1/auth/login`.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/auth/register": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Register a new user account",
+        "description": "Create a new user account and immediately receive an access/refresh token pair. New accounts are assigned the **viewer** role by default. Email and username must be unique across the platform.",
+        "operationId": "register_api_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Authenticate and receive tokens",
+        "description": "Exchange email + password for an access token (30 min) and refresh token (7 days). The same error is returned for wrong email AND wrong password to prevent enumeration. Accounts are locked after 5 consecutive failed attempts.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Rotate refresh token and get new tokens",
+        "description": "Present a valid refresh token to receive a new access + refresh token pair. The old refresh token is immediately revoked (token rotation). Presenting a revoked token indicates possible token theft.",
+        "operationId": "refresh_tokens_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Revoke this device's session",
+        "description": "Revoke the presented refresh token, invalidating this device's session.",
+        "operationId": "logout_api_v1_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Revoke all active sessions",
+        "description": "Revoke all refresh tokens for the current user, logging out all devices.",
+        "operationId": "logout_all_api_v1_auth_logout_all_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Get current user profile",
+        "description": "Return the profile of the currently authenticated user.",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/password-reset/request": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Request a password reset email",
+        "description": "Send a password reset link to the given email address. Always returns 200 regardless of whether the email exists (prevents email enumeration). Reset tokens expire after 15 minutes.",
+        "operationId": "request_password_reset_api_v1_auth_password_reset_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password-reset/confirm": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Complete a password reset",
+        "description": "Apply a new password using the token received by email. On success, ALL active sessions are revoked \u2014 all devices must re-authenticate.",
+        "operationId": "confirm_password_reset_api_v1_auth_password_reset_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordResetConfirm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "tags": [
+          "authentication"
+        ],
+        "summary": "Change password (authenticated)",
+        "description": "Change the current user's password. Requires the current password. All other active sessions are revoked on success.",
+        "operationId": "change_password_api_v1_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "JWT": []
+          }
+        ]
+      }
+    },
+    "/api/v1/workspaces": {
+      "post": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Create a new workspace",
+        "description": "Create a new workspace/engagement. The creating user is automatically assigned as the workspace **owner**. Requires at least the **analyst** platform role.",
+        "operationId": "create_workspace_api_v1_workspaces_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "List workspaces",
+        "description": "Return a paginated list of workspaces the current user can access. Platform admins and superusers see all workspaces. Use `include_archived=true` to include archived workspaces.",
+        "operationId": "list_workspaces_api_v1_workspaces_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "include_archived",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include archived workspaces.",
+              "default": false,
+              "title": "Include Archived"
+            },
+            "description": "Include archived workspaces."
+          },
+          {
+            "name": "status_filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/WorkspaceStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by status.",
+              "title": "Status Filter"
+            },
+            "description": "Filter by status."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed).",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)."
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Results per page.",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Results per page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_WorkspaceSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Get workspace by ID",
+        "description": "Retrieve full workspace details. Returns 404 if the workspace doesn't exist **or** the user has no membership (prevents existence disclosure).",
+        "operationId": "get_workspace_api_v1_workspaces__workspace_id__get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Update workspace metadata",
+        "description": "Partially update workspace metadata. Requires **OWNER** role in the workspace. Use the `DELETE /{id}` endpoint to archive the workspace \u2014 setting `status=archived` here is rejected.",
+        "operationId": "update_workspace_api_v1_workspaces__workspace_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Archive (soft-delete) a workspace",
+        "description": "Soft-delete the workspace by archiving it. All data (scans, findings, reports) is preserved. Requires **OWNER** role. Use `POST /{id}/restore` to undo.",
+        "operationId": "archive_workspace_api_v1_workspaces__workspace_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/restore": {
+      "post": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Restore an archived workspace",
+        "description": "Restore a previously archived workspace back to **ACTIVE** status. Requires **OWNER** role or superuser.",
+        "operationId": "restore_workspace_api_v1_workspaces__workspace_id__restore_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/dashboard": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Workspace dashboard statistics",
+        "description": "Return aggregated engagement statistics for the workspace dashboard: scan counts by status, vulnerability counts by severity and triage status, member count, last scan timestamp, and a weighted risk score (0\u2013100).",
+        "operationId": "get_workspace_dashboard_api_v1_workspaces__workspace_id__dashboard_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceDashboard"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/members": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "List workspace members",
+        "description": "Return all members of the workspace including their per-workspace roles.",
+        "operationId": "list_workspace_members_api_v1_workspaces__workspace_id__members_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkspaceMemberResponse"
+                  },
+                  "title": "Response List Workspace Members Api V1 Workspaces  Workspace Id  Members Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Add a member to the workspace",
+        "description": "Add an existing platform user to this workspace with the specified role. Requires **OWNER** role in the workspace. The user must already have an active platform account.",
+        "operationId": "add_workspace_member_api_v1_workspaces__workspace_id__members_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberAddRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMemberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/members/{target_user_id}": {
+      "patch": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Update a member's workspace role",
+        "description": "Change a workspace member's per-workspace role. Requires **OWNER** role. Cannot change the workspace owner's role.",
+        "operationId": "update_member_role_api_v1_workspaces__workspace_id__members__target_user_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "target_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target User Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberRoleUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceMemberResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Remove a member from the workspace",
+        "description": "Remove a user from the workspace. **Owners** can remove any member. **Members** can only remove themselves (leave the workspace). Cannot remove the workspace owner.",
+        "operationId": "remove_workspace_member_api_v1_workspaces__workspace_id__members__target_user_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "target_user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target User Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/targets": {
+      "post": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Create a new target",
+        "description": "Register a new scan target. The `value` field is strictly validated against `target_type`:\n\n- **host**: Valid IPv4 or IPv6 address (not multicast, not unspecified)\n- **network**: Valid CIDR notation (min /8 for IPv4, /16 for IPv6)\n- **url**: HTTP/HTTPS URL with scheme and hostname\n- **domain**: RFC 1123 hostname, subdomains, or wildcard `*.example.com`\n\nInvalid values are **rejected at the API layer** \u2014 they never touch the database. Requires platform **analyst** role or higher.",
+        "operationId": "create_target_api_v1_targets_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "List targets",
+        "description": "Return a paginated, filterable list of targets. Supports filtering by type, tag, status, and workspace. Supports full-text search across name and value fields.",
+        "operationId": "list_targets_api_v1_targets_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Exclude inactive targets.",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Exclude inactive targets."
+          },
+          {
+            "name": "target_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/TargetType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by target type.",
+              "title": "Target Type"
+            },
+            "description": "Filter by target type."
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by tag label (exact match).",
+              "title": "Tag"
+            },
+            "description": "Filter by tag label (exact match)."
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search name and value (case-insensitive).",
+              "title": "Search"
+            },
+            "description": "Search name and value (case-insensitive)."
+          },
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter targets with scans in this workspace.",
+              "title": "Workspace Id"
+            },
+            "description": "Filter targets with scans in this workspace."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed).",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)."
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Results per page.",
+              "default": 20,
+              "title": "Page Size"
+            },
+            "description": "Results per page."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_TargetSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/targets/{target_id}": {
+      "get": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Get target by ID",
+        "description": "Retrieve full target details including tags, scan count, and open vulnerability count.",
+        "operationId": "get_target_api_v1_targets__target_id__get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Update target metadata",
+        "description": "Partially update a target. Only the creator, admins, or superusers may edit. When updating `value`, `target_type` must also be provided (and vice versa) since value validity depends on type. The updated value is re-validated.",
+        "operationId": "update_target_api_v1_targets__target_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Deactivate (soft-delete) a target",
+        "description": "Mark a target as inactive. Inactive targets cannot be used in new scans, but all historical scan data and findings are preserved. Use `POST /{id}/reactivate` to re-enable.",
+        "operationId": "deactivate_target_api_v1_targets__target_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TargetDeactivate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/targets/{target_id}/reactivate": {
+      "post": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Reactivate an inactive target",
+        "description": "Re-enable a previously deactivated target, making it available for new scans.",
+        "operationId": "reactivate_target_api_v1_targets__target_id__reactivate_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/targets/{target_id}/tags": {
+      "put": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Replace all target tags",
+        "description": "Replace the entire tag set for a target (PUT semantics). All existing tags are removed and replaced with the provided list. Pass an empty list `[]` to clear all tags. Tags are validated and normalised to lowercase.",
+        "operationId": "replace_tags_api_v1_targets__target_id__tags_put",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTagUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/targets/{target_id}/tags/{tag}": {
+      "post": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Add a single tag",
+        "description": "Add a single tag to the target. Idempotent \u2014 adding an already-existing tag returns 200 without error. Tags are normalised to lowercase. Maximum 20 tags per target.",
+        "operationId": "add_tag_api_v1_targets__target_id__tags__tag__post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "targets"
+        ],
+        "summary": "Remove a single tag",
+        "description": "Remove a specific tag from the target. Returns 404 if the tag doesn't exist.",
+        "operationId": "remove_tag_api_v1_targets__target_id__tags__tag__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "target_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Target Id"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Tag"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TargetResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/scope": {
+      "get": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Get workspace scope overview",
+        "description": "Return a summary of the workspace's scope configuration: count of active/inactive rules, allow vs. exclude breakdown, and per-type distribution. If `has_scope_defined` is False, no scans can be run against this workspace.",
+        "operationId": "get_scope_overview_api_v1_workspaces__workspace_id__scope_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceScopeOverview"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/scope/rules": {
+      "get": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "List scope rules",
+        "description": "Return scope rules for the workspace. Optionally filter by disposition (allow/exclude) or rule type.",
+        "operationId": "list_scope_rules_api_v1_workspaces__workspace_id__scope_rules_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Exclude inactive rules.",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Exclude inactive rules."
+          },
+          {
+            "name": "disposition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ScopeDisposition"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by disposition.",
+              "title": "Disposition"
+            },
+            "description": "Filter by disposition."
+          },
+          {
+            "name": "rule_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ScopeRuleType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by rule type.",
+              "title": "Rule Type"
+            },
+            "description": "Filter by rule type."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScopeRuleResponse"
+                  },
+                  "title": "Response List Scope Rules Api V1 Workspaces  Workspace Id  Scope Rules Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Create a scope rule",
+        "description": "Add a new scope rule to the workspace. The `value` is validated against `rule_type` at the API layer. Requires workspace **OWNER** role.\n\n**Rule Type Semantics:**\n- **domain**: Exact FQDN match only \u2014 `example.com` does NOT match subdomains\n- **subdomain**: Matches all subdomains \u2014 `example.com` matches `api.example.com`\n- **cidr**: IPv4/IPv6 network range \u2014 `10.0.0.0/24` matches all hosts in that range\n- **wildcard**: Glob pattern \u2014 `*.dev.example.com` matches one level of subdomains\n- **host**: Single IP exact match \u2014 `192.168.1.100`\n\n**Disposition:**\n- **allow**: Target matching this rule is in scope\n- **exclude**: Target matching this rule is out of scope (exclude overrides allow)",
+        "operationId": "create_scope_rule_api_v1_workspaces__workspace_id__scope_rules_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeRuleCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/scope/rules/import": {
+      "post": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Bulk import scope rules",
+        "description": "Import multiple scope rules in a single request (max 100). Duplicate rules (same type+disposition+value) are silently skipped. Set `replace_existing=true` to clear all existing rules first. Requires workspace **OWNER** role.",
+        "operationId": "bulk_import_scope_rules_api_v1_workspaces__workspace_id__scope_rules_import_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkScopeImport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ScopeRuleResponse"
+                  },
+                  "title": "Response Bulk Import Scope Rules Api V1 Workspaces  Workspace Id  Scope Rules Import Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/scope/rules/{rule_id}": {
+      "get": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Get a scope rule",
+        "operationId": "get_scope_rule_api_v1_workspaces__workspace_id__scope_rules__rule_id__get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Update a scope rule",
+        "description": "Update a scope rule's description, active status, or disposition. The `value` and `rule_type` cannot be changed \u2014 delete and recreate for that. Requires workspace **OWNER** role.",
+        "operationId": "update_scope_rule_api_v1_workspaces__workspace_id__scope_rules__rule_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeRuleUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeRuleResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Delete a scope rule",
+        "description": "Permanently delete a scope rule. Use PATCH with `is_active=false` to temporarily disable without deleting. Requires workspace **OWNER** role.",
+        "operationId": "delete_scope_rule_api_v1_workspaces__workspace_id__scope_rules__rule_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "rule_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Rule Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/scope/check": {
+      "post": {
+        "tags": [
+          "scope"
+        ],
+        "summary": "Check if a target is in scope",
+        "description": "Test whether a target value would be permitted by the workspace's scope rules. This is the same check that runs before every scan. Use this to validate your scope configuration interactively.\n\n**Verdicts:**\n- **permitted**: Target matches an ALLOW rule and no EXCLUDE rule\n- **denied**: Target matches an EXCLUDE rule, or no ALLOW rule matches\n- **no_scope_defined**: No active rules exist \u2014 all scans are blocked\n\nThis endpoint does NOT trigger a scan.",
+        "operationId": "check_scope_api_v1_workspaces__workspace_id__scope_check_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeCheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeCheckResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles": {
+      "get": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "List scan profiles",
+        "description": "Return paginated scan profiles. By default includes builtin profiles and platform-wide custom profiles. Filter by workspace to include workspace-scoped profiles. Builtin profiles are listed first, then custom profiles alphabetically.",
+        "operationId": "list_profiles_api_v1_profiles_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Include profiles for this workspace.",
+              "title": "Workspace Id"
+            },
+            "description": "Include profiles for this workspace."
+          },
+          {
+            "name": "active_only",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Exclude inactive profiles.",
+              "default": true,
+              "title": "Active Only"
+            },
+            "description": "Exclude inactive profiles."
+          },
+          {
+            "name": "profile_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ProfileType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by type.",
+              "title": "Profile Type"
+            },
+            "description": "Filter by type."
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by name.",
+              "title": "Search"
+            },
+            "description": "Search by name."
+          },
+          {
+            "name": "include_builtin",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include system builtin profiles.",
+              "default": true,
+              "title": "Include Builtin"
+            },
+            "description": "Include system builtin profiles."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_ScanProfileSummary_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Create a scan profile",
+        "description": "Create a new custom scan profile. Optionally specify an initial plugin set with per-plugin config overrides. For standard configurations, prefer **cloning** a builtin profile. Requires platform **Analyst** role or higher.",
+        "operationId": "create_profile_api_v1_profiles_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanProfileCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}": {
+      "get": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Get profile by ID",
+        "description": "Return full profile details including all plugin entries with their enable state, execution order, and config overrides.",
+        "operationId": "get_profile_api_v1_profiles__profile_id__get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Update profile metadata",
+        "description": "Partially update a custom profile's name, description, scan type, priority, timeout, tags, or active state. **Builtin profiles cannot be updated** \u2014 clone them first.",
+        "operationId": "update_profile_api_v1_profiles__profile_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanProfileUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Delete a profile",
+        "description": "Permanently delete a custom profile. **Builtin profiles cannot be deleted.** The operation deletes all associated plugin entries.",
+        "operationId": "delete_profile_api_v1_profiles__profile_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}/clone": {
+      "post": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Clone a profile",
+        "description": "Clone any profile (builtin or custom) into a new **Custom** profile. All plugin entries and config overrides are copied to the clone. The clone is fully editable. Use this to customise a builtin profile for a specific engagement.",
+        "operationId": "clone_profile_api_v1_profiles__profile_id__clone_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanProfileClone"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}/plugins": {
+      "post": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Add plugin to profile",
+        "description": "Add a plugin to the profile with optional enable state, execution order, and config overrides. Idempotent \u2014 adding an already-present plugin returns 200. Requires edit permission on the profile.",
+        "operationId": "add_plugin_api_v1_profiles__profile_id__plugins_post",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePluginAdd"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/profiles/{profile_id}/plugins/{plugin_id}": {
+      "patch": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Update plugin in profile",
+        "description": "Update a plugin entry within a profile. Can change `is_enabled`, `execution_order`, or `config_override`. Use `is_enabled=false` to disable a plugin without removing it. `config_override` replaces the existing override entirely.",
+        "operationId": "update_plugin_api_v1_profiles__profile_id__plugins__plugin_id__patch",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScanProfilePluginUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "scan-profiles"
+        ],
+        "summary": "Remove plugin from profile",
+        "description": "Remove a plugin from the profile entirely. Use PATCH with `is_enabled=false` to disable without removing. Returns 404 if the plugin is not in this profile.",
+        "operationId": "remove_plugin_api_v1_profiles__profile_id__plugins__plugin_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "profile_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Profile Id"
+            }
+          },
+          {
+            "name": "plugin_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Plugin Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScanProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/assets": {
+      "get": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "List discovered assets",
+        "operationId": "list_assets_api_v1_workspaces__workspace_id__assets_get",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "target_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Target Id"
+            }
+          },
+          {
+            "name": "asset_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AssetType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Asset Type"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1,
+              "title": "Page"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Page Size"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AssetResponse_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/assets/{asset_id}": {
+      "delete": {
+        "tags": [
+          "assets"
+        ],
+        "summary": "Delete an asset",
+        "operationId": "delete_asset_api_v1_workspaces__workspace_id__assets__asset_id__delete",
+        "security": [
+          {
+            "JWT": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          },
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Asset Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "API health check",
+        "description": "Return API health status.\n\nReturns:\n    dict: Health status with version info.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AssetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id"
+          },
+          "scan_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scan Id"
+          },
+          "asset_type": {
+            "$ref": "#/components/schemas/AssetType"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "source_tools": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Source Tools"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "workspace_id",
+          "target_id",
+          "scan_id",
+          "asset_type",
+          "value",
+          "source_tools",
+          "metadata",
+          "is_active"
+        ],
+        "title": "AssetResponse",
+        "description": "API response for a DiscoveredAsset record."
+      },
+      "AssetType": {
+        "type": "string",
+        "enum": [
+          "domain",
+          "ip",
+          "port",
+          "url",
+          "cloud_resource",
+          "other"
+        ],
+        "title": "AssetType",
+        "description": "Classification of the discovered asset."
+      },
+      "BulkScopeImport": {
+        "properties": {
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/BulkScopeRuleItem"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Rules",
+            "description": "List of scope rules to import (max 100 per request)."
+          },
+          "replace_existing": {
+            "type": "boolean",
+            "title": "Replace Existing",
+            "description": "If True, DELETE all existing active rules before importing. If False, merge with existing rules (duplicates skipped).",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "rules"
+        ],
+        "title": "BulkScopeImport",
+        "description": "Import multiple scope rules in a single request.\n\nRules with duplicate value+type+disposition combinations for this workspace\nare silently skipped (idempotent import)."
+      },
+      "BulkScopeRuleItem": {
+        "properties": {
+          "rule_type": {
+            "$ref": "#/components/schemas/ScopeRuleType"
+          },
+          "disposition": {
+            "$ref": "#/components/schemas/ScopeDisposition",
+            "default": "allow"
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_type",
+          "value"
+        ],
+        "title": "BulkScopeRuleItem",
+        "description": "A single item in a bulk scope import."
+      },
+      "BulkTagUpdate": {
+        "properties": {
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Tags",
+            "description": "Complete replacement tag set (max 20). Empties all tags if [].",
+            "examples": [
+              [
+                "production",
+                "web-app",
+                "external"
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "tags"
+        ],
+        "title": "BulkTagUpdate",
+        "description": "Replace the entire tag set for a target.\n\nPUT semantics \u2014 all existing tags are removed and replaced with this list.\nUse the individual tag add/remove endpoints for surgical updates."
+      },
+      "ChangePasswordRequest": {
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "title": "Current Password",
+            "description": "The user's current password."
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "New Password",
+            "description": "New password (minimum 12 characters)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePasswordRequest",
+        "description": "Current and new password for an authenticated password change."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "User's email address.",
+            "examples": [
+              "analyst@vulnforge.local"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "User's plaintext password.",
+            "examples": [
+              "Str0ng!P4ssw0rd#"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "description": "Credentials for the login endpoint."
+      },
+      "LoginResponse": {
+        "properties": {
+          "tokens": {
+            "$ref": "#/components/schemas/TokenResponse",
+            "description": "Issued token pair."
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserResponse",
+            "description": "Authenticated user profile."
+          }
+        },
+        "type": "object",
+        "required": [
+          "tokens",
+          "user"
+        ],
+        "title": "LoginResponse",
+        "description": "Full login response including token pair and user profile."
+      },
+      "LogoutRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Refresh Token",
+            "description": "The refresh token to invalidate."
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "LogoutRequest",
+        "description": "Refresh token to revoke on logout."
+      },
+      "MemberAddRequest": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id",
+            "description": "UUID of the user to add."
+          },
+          "role": {
+            "$ref": "#/components/schemas/WorkspaceMemberRole",
+            "description": "Per-workspace role for the new member.",
+            "default": "viewer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "title": "MemberAddRequest",
+        "description": "Request body for adding a member to a workspace."
+      },
+      "MemberRoleUpdate": {
+        "properties": {
+          "role": {
+            "$ref": "#/components/schemas/WorkspaceMemberRole",
+            "description": "New per-workspace role for this member."
+          }
+        },
+        "type": "object",
+        "required": [
+          "role"
+        ],
+        "title": "MemberRoleUpdate",
+        "description": "Request body for changing a member's workspace role."
+      },
+      "MessageResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Confirmation or status message."
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "MessageResponse",
+        "description": "Simple confirmation response with a single message field."
+      },
+      "PaginatedResponse_AssetResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssetResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Page of results."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "Total number of matching records."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)."
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page."
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pages",
+            "description": "Total number of pages."
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "pages"
+        ],
+        "title": "PaginatedResponse[AssetResponse]"
+      },
+      "PaginatedResponse_ScanProfileSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ScanProfileSummary"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Page of results."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "Total number of matching records."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)."
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page."
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pages",
+            "description": "Total number of pages."
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "pages"
+        ],
+        "title": "PaginatedResponse[ScanProfileSummary]"
+      },
+      "PaginatedResponse_TargetSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TargetSummary"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Page of results."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "Total number of matching records."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)."
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page."
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pages",
+            "description": "Total number of pages."
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "pages"
+        ],
+        "title": "PaginatedResponse[TargetSummary]"
+      },
+      "PaginatedResponse_WorkspaceSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSummary"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Page of results."
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Total",
+            "description": "Total number of matching records."
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)."
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Number of items per page."
+          },
+          "pages": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pages",
+            "description": "Total number of pages."
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "page",
+          "page_size",
+          "pages"
+        ],
+        "title": "PaginatedResponse[WorkspaceSummary]"
+      },
+      "PasswordResetConfirm": {
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Token",
+            "description": "The raw password reset token received via email."
+          },
+          "new_password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "New Password",
+            "description": "New password (minimum 12 characters)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "title": "PasswordResetConfirm",
+        "description": "Token and new password for completing a password reset."
+      },
+      "PasswordResetRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Email of the account to reset.",
+            "examples": [
+              "analyst@vulnforge.local"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "PasswordResetRequest",
+        "description": "Email address for the password reset request flow."
+      },
+      "Priority": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "title": "Priority",
+        "description": "Scan scheduling priority for queue ordering."
+      },
+      "ProfilePluginAdd": {
+        "properties": {
+          "plugin_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plugin Id",
+            "description": "Plugin UUID to add."
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled",
+            "default": true
+          },
+          "execution_order": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Execution Order",
+            "default": 0
+          },
+          "config_override": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config Override"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plugin_id"
+        ],
+        "title": "ProfilePluginAdd",
+        "description": "Add a plugin to a profile."
+      },
+      "ProfilePluginConfig": {
+        "properties": {
+          "plugin_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plugin Id",
+            "description": "Plugin UUID."
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled",
+            "description": "Whether this plugin runs when the profile is used.",
+            "default": true
+          },
+          "execution_order": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Execution Order",
+            "description": "Execution order within the profile (ascending).",
+            "default": 0
+          },
+          "config_override": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config Override",
+            "description": "JSON overrides merged with Plugin.default_config at scan dispatch. Keys must match the plugin's declared config schema."
+          }
+        },
+        "type": "object",
+        "required": [
+          "plugin_id"
+        ],
+        "title": "ProfilePluginConfig",
+        "description": "Configuration for a single plugin within a profile."
+      },
+      "ProfileType": {
+        "type": "string",
+        "enum": [
+          "quick_recon",
+          "external_assessment",
+          "infrastructure",
+          "web_assessment",
+          "custom"
+        ],
+        "title": "ProfileType",
+        "description": "Classification of a scan profile.\n\nValues:\n    QUICK_RECON:          Fast passive intelligence gathering.\n                          Plugins: DNS enum, WHOIS, Shodan, port discovery.\n                          Duration: ~5 minutes.\n    EXTERNAL_ASSESSMENT:  Comprehensive external perimeter assessment.\n                          Plugins: full recon + vulnerability scanning.\n                          Duration: ~2 hours.\n    INFRASTRUCTURE:       Network-focused deep assessment.\n                          Plugins: CIDR sweep, Nmap, CVE detection, SSL audit.\n                          Duration: ~4 hours.\n    WEB_ASSESSMENT:       Web application-focused assessment.\n                          Plugins: Nikto, Nuclei web templates, header checks,\n                          directory bruteforce.\n                          Duration: ~2 hours.\n    CUSTOM:               User-defined. No default plugins. Full control."
+      },
+      "RefreshRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Refresh Token",
+            "description": "The opaque refresh token issued at login."
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshRequest",
+        "description": "Refresh token presented to obtain a new token pair."
+      },
+      "ScanProfileClone": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name for the new cloned profile.",
+            "examples": [
+              "Web Assessment \u2014 Client XYZ"
+            ]
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id",
+            "description": "Workspace for the cloned profile. NULL = platform-wide."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Override description for the clone."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "ScanProfileClone",
+        "description": "Clone an existing profile (builtin or custom) into a new custom profile."
+      },
+      "ScanProfileCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Unique human-readable profile name.",
+            "examples": [
+              "Q2 Web Assessment",
+              "Client XYZ Infrastructure"
+            ]
+          },
+          "profile_type": {
+            "$ref": "#/components/schemas/ProfileType",
+            "description": "Profile classification:\n- **quick_recon**: Fast passive recon (~5 min)\n- **external_assessment**: Full external perimeter (~2 hr)\n- **infrastructure**: Network deep-dive (~4 hr)\n- **web_assessment**: Web app focused (~2 hr)\n- **custom**: User-defined, no default plugins",
+            "examples": [
+              "custom",
+              "web_assessment"
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description of what this profile assesses."
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id",
+            "description": "Scope to a specific workspace. NULL = platform-wide profile (visible to all workspaces)."
+          },
+          "default_scan_type": {
+            "$ref": "#/components/schemas/ScanType",
+            "description": "Scan type applied to scans created from this profile.",
+            "default": "full"
+          },
+          "default_priority": {
+            "$ref": "#/components/schemas/Priority",
+            "description": "Default queue priority.",
+            "default": "medium"
+          },
+          "timeout_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1440.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Minutes",
+            "description": "Per-scan timeout in minutes (1\u20131440). NULL = system default."
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 10,
+            "title": "Tags",
+            "description": "Searchable labels (max 10).",
+            "examples": [
+              [
+                "external",
+                "quarterly",
+                "web"
+              ]
+            ]
+          },
+          "plugins": {
+            "items": {
+              "$ref": "#/components/schemas/ProfilePluginConfig"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Plugins",
+            "description": "Initial plugin set. Each entry references a Plugin UUID. For builtin profile types, the default plugin set is applied automatically if this list is empty."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "profile_type"
+        ],
+        "title": "ScanProfileCreate",
+        "description": "Payload for creating a new scan profile."
+      },
+      "ScanProfilePluginResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "ScanProfilePlugin record UUID."
+          },
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Profile Id"
+          },
+          "plugin_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Plugin Id"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "title": "Is Enabled"
+          },
+          "execution_order": {
+            "type": "integer",
+            "title": "Execution Order"
+          },
+          "config_override": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Config Override"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "plugin_name": {
+            "type": "string",
+            "title": "Plugin Name",
+            "description": "Plugin machine name."
+          },
+          "plugin_display_name": {
+            "type": "string",
+            "title": "Plugin Display Name",
+            "description": "Plugin human-readable name."
+          },
+          "plugin_phase": {
+            "type": "string",
+            "title": "Plugin Phase",
+            "description": "PTES phase."
+          },
+          "plugin_version": {
+            "type": "string",
+            "title": "Plugin Version",
+            "description": "Plugin version."
+          },
+          "plugin_is_enabled": {
+            "type": "boolean",
+            "title": "Plugin Is Enabled",
+            "description": "Global plugin enable state."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "profile_id",
+          "plugin_id",
+          "is_enabled",
+          "execution_order",
+          "config_override",
+          "created_at",
+          "updated_at",
+          "plugin_name",
+          "plugin_display_name",
+          "plugin_phase",
+          "plugin_version",
+          "plugin_is_enabled"
+        ],
+        "title": "ScanProfilePluginResponse",
+        "description": "Plugin entry within a scan profile response."
+      },
+      "ScanProfilePluginUpdate": {
+        "properties": {
+          "is_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Enabled"
+          },
+          "execution_order": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Execution Order"
+          },
+          "config_override": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config Override",
+            "description": "Replace config_override entirely with this value."
+          }
+        },
+        "type": "object",
+        "title": "ScanProfilePluginUpdate",
+        "description": "Update a plugin entry in a profile."
+      },
+      "ScanProfileResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "profile_type": {
+            "$ref": "#/components/schemas/ProfileType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_builtin": {
+            "type": "boolean",
+            "title": "Is Builtin"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
+          },
+          "created_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Id"
+          },
+          "default_scan_type": {
+            "$ref": "#/components/schemas/ScanType"
+          },
+          "default_priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "timeout_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Minutes"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "cloned_from_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloned From Id"
+          },
+          "plugin_count": {
+            "type": "integer",
+            "title": "Plugin Count",
+            "description": "Number of enabled plugins."
+          },
+          "total_plugin_entries": {
+            "type": "integer",
+            "title": "Total Plugin Entries",
+            "description": "Total plugin entries (incl. disabled)."
+          },
+          "plugins": {
+            "items": {
+              "$ref": "#/components/schemas/ScanProfilePluginResponse"
+            },
+            "type": "array",
+            "title": "Plugins"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "name",
+          "profile_type",
+          "description",
+          "is_builtin",
+          "is_active",
+          "workspace_id",
+          "created_by_id",
+          "default_scan_type",
+          "default_priority",
+          "timeout_minutes",
+          "tags",
+          "cloned_from_id",
+          "plugin_count",
+          "total_plugin_entries"
+        ],
+        "title": "ScanProfileResponse",
+        "description": "Full scan profile representation."
+      },
+      "ScanProfileSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "profile_type": {
+            "$ref": "#/components/schemas/ProfileType"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_builtin": {
+            "type": "boolean",
+            "title": "Is Builtin"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id"
+          },
+          "created_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By Id"
+          },
+          "default_scan_type": {
+            "$ref": "#/components/schemas/ScanType"
+          },
+          "default_priority": {
+            "$ref": "#/components/schemas/Priority"
+          },
+          "timeout_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Minutes"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags"
+          },
+          "cloned_from_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cloned From Id"
+          },
+          "plugin_count": {
+            "type": "integer",
+            "title": "Plugin Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "profile_type",
+          "description",
+          "is_builtin",
+          "is_active",
+          "workspace_id",
+          "created_by_id",
+          "default_scan_type",
+          "default_priority",
+          "timeout_minutes",
+          "tags",
+          "cloned_from_id",
+          "plugin_count",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ScanProfileSummary",
+        "description": "Lightweight profile representation for list views."
+      },
+      "ScanProfileUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Updated profile name."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "default_scan_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScanType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default_priority": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Priority"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timeout_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1440.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timeout Minutes",
+            "description": "Set to 0 to clear (revert to system default)."
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "maxItems": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Enable or disable the profile."
+          }
+        },
+        "type": "object",
+        "title": "ScanProfileUpdate",
+        "description": "Partial update payload for a scan profile.\n\nBuiltin profiles cannot be updated (enforced by service)."
+      },
+      "ScanStatusSummary": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total",
+            "default": 0
+          },
+          "pending": {
+            "type": "integer",
+            "title": "Pending",
+            "default": 0
+          },
+          "running": {
+            "type": "integer",
+            "title": "Running",
+            "default": 0
+          },
+          "paused": {
+            "type": "integer",
+            "title": "Paused",
+            "default": 0
+          },
+          "completed": {
+            "type": "integer",
+            "title": "Completed",
+            "default": 0
+          },
+          "failed": {
+            "type": "integer",
+            "title": "Failed",
+            "default": 0
+          },
+          "cancelled": {
+            "type": "integer",
+            "title": "Cancelled",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ScanStatusSummary",
+        "description": "Scan counts broken down by status."
+      },
+      "ScanType": {
+        "type": "string",
+        "enum": [
+          "reconnaissance",
+          "vulnerability",
+          "exploitation",
+          "full"
+        ],
+        "title": "ScanType",
+        "description": "Scope of the scan \u2014 which PTES phases to execute.\n\nValues:\n    RECONNAISSANCE:      Only recon plugins (nmap, shodan).\n    VULNERABILITY:       Only vuln scanner plugins (nuclei, nikto).\n    EXPLOITATION:        Only exploitation plugins (metasploit, sqlmap).\n    FULL:                All phases in sequence."
+      },
+      "ScopeCheckRequest": {
+        "properties": {
+          "target_value": {
+            "type": "string",
+            "maxLength": 2048,
+            "minLength": 1,
+            "title": "Target Value",
+            "description": "The target value to check against the workspace's scope rules. Can be an IP address, domain, CIDR, or URL.",
+            "examples": [
+              "api.example.com",
+              "192.168.1.100",
+              "https://app.example.com"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_value"
+        ],
+        "title": "ScopeCheckRequest",
+        "description": "Ad-hoc scope check request \u2014 test a value against workspace scope."
+      },
+      "ScopeCheckResponse": {
+        "properties": {
+          "target_value": {
+            "type": "string",
+            "title": "Target Value",
+            "description": "The target value that was checked."
+          },
+          "verdict": {
+            "$ref": "#/components/schemas/ScopeVerdict",
+            "description": "Scope check outcome:\n- **permitted**: Target is in scope \u2014 scan may proceed\n- **denied**: Target is out of scope \u2014 scan MUST NOT proceed\n- **no_scope_defined**: No rules configured \u2014 all scans blocked"
+          },
+          "is_permitted": {
+            "type": "boolean",
+            "title": "Is Permitted",
+            "description": "True if verdict is 'permitted'."
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason",
+            "description": "Human-readable explanation of the verdict."
+          },
+          "matched_rule_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Rule Id",
+            "description": "UUID of the rule that determined the verdict."
+          },
+          "matched_rule_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeRuleType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Type of the matched rule."
+          },
+          "matched_disposition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeDisposition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Disposition of the matched rule."
+          },
+          "denied_by_exclusion": {
+            "type": "boolean",
+            "title": "Denied By Exclusion",
+            "description": "True if the denial was caused by an explicit EXCLUDE rule.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "target_value",
+          "verdict",
+          "is_permitted",
+          "reason"
+        ],
+        "title": "ScopeCheckResponse",
+        "description": "Result of a scope check against a workspace's rule set."
+      },
+      "ScopeDisposition": {
+        "type": "string",
+        "enum": [
+          "allow",
+          "exclude"
+        ],
+        "title": "ScopeDisposition",
+        "description": "Whether this rule allows or excludes a target.\n\nValues:\n    ALLOW:   Target matching this rule is in scope.\n    EXCLUDE: Target matching this rule is explicitly out of scope.\n             Exclusions always override allow rules (deny wins)."
+      },
+      "ScopeRuleCreate": {
+        "properties": {
+          "rule_type": {
+            "$ref": "#/components/schemas/ScopeRuleType",
+            "description": "Matching strategy:\n- **domain**: Exact FQDN match (e.g., `example.com`)\n- **subdomain**: All subdomains of apex domain (e.g., rule `example.com` matches `api.example.com`)\n- **cidr**: IPv4/IPv6 network range (e.g., `10.0.0.0/24`)\n- **wildcard**: Glob pattern (e.g., `*.dev.example.com`)\n- **host**: Single IP address (e.g., `192.168.1.100`)",
+            "examples": [
+              "domain",
+              "cidr",
+              "subdomain"
+            ]
+          },
+          "disposition": {
+            "$ref": "#/components/schemas/ScopeDisposition",
+            "description": "Whether this rule **allows** or **excludes** matching targets.\nExclusions always override allow rules (deny wins).",
+            "default": "allow",
+            "examples": [
+              "allow",
+              "exclude"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Value",
+            "description": "The scope boundary value. Must be valid for the declared `rule_type`:\n- domain/subdomain: domain name (e.g., `example.com`)\n- cidr: CIDR notation (e.g., `10.0.0.0/24`)\n- wildcard: glob pattern (e.g., `*.dev.example.com`)\n- host: IP address (e.g., `192.168.1.100`)",
+            "examples": [
+              "example.com",
+              "10.0.0.0/24",
+              "*.dev.example.com"
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional note explaining why this scope boundary exists.",
+            "examples": [
+              "Client-authorized external perimeter"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "rule_type",
+          "value"
+        ],
+        "title": "ScopeRuleCreate",
+        "description": "Payload for creating a new scope rule."
+      },
+      "ScopeRuleResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Parent workspace UUID."
+          },
+          "rule_type": {
+            "$ref": "#/components/schemas/ScopeRuleType",
+            "description": "Matching strategy."
+          },
+          "disposition": {
+            "$ref": "#/components/schemas/ScopeDisposition",
+            "description": "Allow or exclude."
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The scope boundary value (normalised)."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional rule description."
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this rule is currently active."
+          },
+          "created_by_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By Id",
+            "description": "UUID of the user who created this rule."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "workspace_id",
+          "rule_type",
+          "disposition",
+          "value",
+          "description",
+          "is_active",
+          "created_by_id"
+        ],
+        "title": "ScopeRuleResponse",
+        "description": "Full scope rule representation returned by the API."
+      },
+      "ScopeRuleType": {
+        "type": "string",
+        "enum": [
+          "domain",
+          "subdomain",
+          "cidr",
+          "wildcard",
+          "host"
+        ],
+        "title": "ScopeRuleType",
+        "description": "Classification of a scope rule entry.\n\nValues:\n    DOMAIN:    Exact domain match \u2014 only this specific FQDN is in scope.\n               Example: ``example.com`` matches ``example.com`` exactly;\n               does NOT match ``sub.example.com``.\n    SUBDOMAIN: All subdomains of a domain, but NOT the apex domain itself.\n               Example: ``example.com`` matches ``api.example.com``,\n               ``dev.api.example.com`` but NOT ``example.com``.\n    CIDR:      IPv4 or IPv6 CIDR network range.\n               Example: ``10.0.0.0/24`` matches any host in that range.\n    WILDCARD:  Glob-style shell pattern (``fnmatch`` semantics).\n               Example: ``*.dev.example.com``, ``api-*.example.com``.\n    HOST:      Single IP address (no prefix). Exact match only.\n               Example: ``192.168.1.100``."
+      },
+      "ScopeRuleUpdate": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Updated description."
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "Enable or disable the rule without deleting it."
+          },
+          "disposition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ScopeDisposition"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Change rule from ALLOW to EXCLUDE or vice versa."
+          }
+        },
+        "type": "object",
+        "title": "ScopeRuleUpdate",
+        "description": "Partial update payload for an existing scope rule."
+      },
+      "ScopeVerdict": {
+        "type": "string",
+        "enum": [
+          "permitted",
+          "denied",
+          "no_scope_defined"
+        ],
+        "title": "ScopeVerdict",
+        "description": "The outcome of a scope check.\n\nValues:\n    PERMITTED:     Target is explicitly in scope \u2014 scan may proceed.\n    DENIED:        Target is out of scope \u2014 scan MUST NOT proceed.\n    NO_SCOPE_DEFINED: No active scope rules exist for this workspace.\n                   Scans are blocked until scope is configured."
+      },
+      "TargetCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Human-readable label for this target.",
+            "examples": [
+              "Production Web Server",
+              "Corporate VPN Gateway"
+            ]
+          },
+          "target_type": {
+            "$ref": "#/components/schemas/TargetType",
+            "description": "Asset type classification.",
+            "examples": [
+              "host",
+              "network",
+              "url",
+              "domain"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Value",
+            "description": "The scannable value. Format depends on target_type:\n- **host**: IPv4 or IPv6 address (e.g., `192.168.1.1`)\n- **network**: CIDR notation (e.g., `10.0.0.0/24`)\n- **url**: HTTP/HTTPS URL (e.g., `https://app.example.com`)\n- **domain**: Domain name (e.g., `example.com`, `*.example.com`)",
+            "examples": [
+              "192.168.1.100",
+              "10.0.0.0/24",
+              "https://app.example.com",
+              "example.com"
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description of this target asset."
+          },
+          "scope_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Notes",
+            "description": "Authorization notes and explicit out-of-scope exclusions."
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 20,
+            "title": "Tags",
+            "description": "Optional list of labels (max 20). Auto-normalised to lowercase.",
+            "examples": [
+              [
+                "production",
+                "web-app",
+                "external"
+              ]
+            ]
+          },
+          "workspace_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace Id",
+            "description": "Optional workspace to associate this target with."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "target_type",
+          "value"
+        ],
+        "title": "TargetCreate",
+        "description": "Payload for creating a new target.\n\nThe ``value`` field is validated against ``target_type`` using the\ndedicated validator module.  Invalid values are rejected with a\ndescriptive error before the record ever reaches the database."
+      },
+      "TargetDeactivate": {
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "Optional reason for deactivation (stored in scope_notes)."
+          }
+        },
+        "type": "object",
+        "title": "TargetDeactivate",
+        "description": "Deactivate a target with an optional reason."
+      },
+      "TargetResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable target label."
+          },
+          "target_type": {
+            "$ref": "#/components/schemas/TargetType",
+            "description": "Asset type classification."
+          },
+          "value": {
+            "type": "string",
+            "title": "Value",
+            "description": "The validated, normalised scannable value."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Asset description."
+          },
+          "scope_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Notes",
+            "description": "Authorization notes."
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether this target is available for scanning."
+          },
+          "created_by_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By Id",
+            "description": "UUID of the user who registered this target."
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TargetTagResponse"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "Associated tag labels."
+          },
+          "scan_count": {
+            "type": "integer",
+            "title": "Scan Count",
+            "description": "Total number of scans run against this target.",
+            "default": 0
+          },
+          "open_vulnerability_count": {
+            "type": "integer",
+            "title": "Open Vulnerability Count",
+            "description": "Number of open/confirmed vulnerabilities on this target.",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "name",
+          "target_type",
+          "value",
+          "description",
+          "scope_notes",
+          "is_active",
+          "created_by_id"
+        ],
+        "title": "TargetResponse",
+        "description": "Full target representation returned by the API."
+      },
+      "TargetSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "target_type": {
+            "$ref": "#/components/schemas/TargetType"
+          },
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_by_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Created By Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "description": "Tag label strings (not full TargetTag objects)."
+          },
+          "scan_count": {
+            "type": "integer",
+            "title": "Scan Count",
+            "default": 0
+          },
+          "open_vulnerability_count": {
+            "type": "integer",
+            "title": "Open Vulnerability Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "target_type",
+          "value",
+          "is_active",
+          "created_by_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TargetSummary",
+        "description": "Lightweight target representation for list views."
+      },
+      "TargetTagResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Tag record UUID."
+          },
+          "target_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Target Id",
+            "description": "Parent target UUID."
+          },
+          "tag": {
+            "type": "string",
+            "title": "Tag",
+            "description": "Normalised tag label."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "target_id",
+          "tag",
+          "created_at"
+        ],
+        "title": "TargetTagResponse",
+        "description": "Single tag as returned by the API."
+      },
+      "TargetType": {
+        "type": "string",
+        "enum": [
+          "host",
+          "network",
+          "url",
+          "domain"
+        ],
+        "title": "TargetType",
+        "description": "Classification of the target asset type.\n\nValues:\n    HOST:     Single IP address (e.g., ``192.168.1.1``).\n    NETWORK:  CIDR range (e.g., ``10.0.0.0/24``).\n    URL:      Fully qualified URL (e.g., ``https://app.example.com``).\n    DOMAIN:   Domain name (e.g., ``example.com``)."
+      },
+      "TargetUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Updated human-readable label."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Updated description."
+          },
+          "scope_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope Notes",
+            "description": "Updated authorization/scope notes."
+          },
+          "target_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TargetType"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated target type (must be provided together with value)."
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Updated target value (must be provided together with target_type)."
+          }
+        },
+        "type": "object",
+        "title": "TargetUpdate",
+        "description": "Partial update payload for an existing target.\n\nOnly provided fields are updated.\nNote: ``target_type`` and ``value`` cannot be changed independently \u2014\nboth must be provided together to trigger re-validation."
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "JWT access token."
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "Opaque refresh token."
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "description": "OAuth2 token type.",
+            "default": "bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Access token lifetime in seconds."
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "expires_in"
+        ],
+        "title": "TokenResponse",
+        "description": "Token pair returned after successful authentication or refresh.\n\nAttributes:\n    access_token:  Short-lived JWT (30 min). Put in ``Authorization: Bearer``.\n    refresh_token: Long-lived opaque token (7 days). Use to refresh.\n    token_type:    Always ``\"bearer\"``.\n    expires_in:    Access token lifetime in seconds."
+      },
+      "UserCreate": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 3,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Username",
+            "description": "Unique username (alphanumeric, underscores, hyphens only).",
+            "examples": [
+              "pentest_analyst"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "Valid email address used for authentication.",
+            "examples": [
+              "analyst@vulnforge.local"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "description": "Password (minimum 12 characters).",
+            "examples": [
+              "Str0ng!P4ssw0rd#"
+            ]
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Optional full display name.",
+            "examples": [
+              "Alice Johnson"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "title": "UserCreate",
+        "description": "Schema for registering a new user account.\n\nPassword is validated for minimum length here.  bcrypt hashing is\ndone in the service layer \u2014 never in the schema."
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "Unique username."
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "description": "Email address."
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name",
+            "description": "Full display name."
+          },
+          "role": {
+            "$ref": "#/components/schemas/UserRole",
+            "description": "Platform role."
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Whether the account is enabled."
+          },
+          "is_superuser": {
+            "type": "boolean",
+            "title": "Is Superuser",
+            "description": "Superuser status."
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At",
+            "description": "UTC timestamp of last successful login."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "username",
+          "email",
+          "full_name",
+          "role",
+          "is_active",
+          "is_superuser",
+          "last_login_at"
+        ],
+        "title": "UserResponse",
+        "description": "Safe user representation returned by the API.\n\nDeliberately EXCLUDES: hashed_password, password_reset_token_hash,\nfailed_login_attempts, locked_until."
+      },
+      "UserRole": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "analyst",
+          "viewer"
+        ],
+        "title": "UserRole",
+        "description": "Enumeration of platform roles with ascending privilege levels.\n\nDesign:\n    ``str`` mixin ensures SQLAlchemy serialises the value (not the name)\n    into JSONB columns and Pydantic schemas receive a plain string.\n\nRoles:\n    admin:   Full platform access including user management and plugin config.\n    analyst: Can create scans, triage findings, and generate reports.\n    viewer:  Read-only access to scan results and reports."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VulnerabilitySeveritySummary": {
+        "properties": {
+          "critical": {
+            "type": "integer",
+            "title": "Critical",
+            "default": 0
+          },
+          "high": {
+            "type": "integer",
+            "title": "High",
+            "default": 0
+          },
+          "medium": {
+            "type": "integer",
+            "title": "Medium",
+            "default": 0
+          },
+          "low": {
+            "type": "integer",
+            "title": "Low",
+            "default": 0
+          },
+          "info": {
+            "type": "integer",
+            "title": "Info",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "VulnerabilitySeveritySummary",
+        "description": "Vulnerability counts broken down by severity (open/confirmed only)."
+      },
+      "VulnerabilityStatusSummary": {
+        "properties": {
+          "open": {
+            "type": "integer",
+            "title": "Open",
+            "default": 0
+          },
+          "confirmed": {
+            "type": "integer",
+            "title": "Confirmed",
+            "default": 0
+          },
+          "false_positive": {
+            "type": "integer",
+            "title": "False Positive",
+            "default": 0
+          },
+          "mitigated": {
+            "type": "integer",
+            "title": "Mitigated",
+            "default": 0
+          },
+          "resolved": {
+            "type": "integer",
+            "title": "Resolved",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "VulnerabilityStatusSummary",
+        "description": "Vulnerability counts broken down by triage status."
+      },
+      "WorkspaceCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Short, descriptive engagement name.",
+            "examples": [
+              "Q3 2026 External Pentest"
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Extended scope and objectives description.",
+            "examples": [
+              "Full external attack surface assessment for Acme Corp."
+            ]
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name",
+            "description": "Name of the client organisation.",
+            "examples": [
+              "Acme Corporation"
+            ]
+          },
+          "client_contact": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Contact",
+            "description": "Primary contact at the client (name or email).",
+            "examples": [
+              "alice@acme.com"
+            ]
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Planned engagement start date (ISO 8601 date).",
+            "examples": [
+              "2026-09-01"
+            ]
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Planned engagement end date (ISO 8601 date).",
+            "examples": [
+              "2026-09-30"
+            ]
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings",
+            "description": "Optional workspace-level configuration overrides."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorkspaceCreate",
+        "description": "Payload for creating a new workspace."
+      },
+      "WorkspaceDashboard": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace UUID."
+          },
+          "workspace_name": {
+            "type": "string",
+            "title": "Workspace Name",
+            "description": "Workspace name."
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkspaceStatus",
+            "description": "Workspace lifecycle status."
+          },
+          "is_overdue": {
+            "type": "boolean",
+            "title": "Is Overdue",
+            "description": "Whether engagement end date has passed."
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "description": "Number of workspace members."
+          },
+          "scans": {
+            "$ref": "#/components/schemas/ScanStatusSummary",
+            "description": "Scan counts by status."
+          },
+          "vulnerabilities_by_severity": {
+            "$ref": "#/components/schemas/VulnerabilitySeveritySummary",
+            "description": "Open vulnerability counts by CVSS severity."
+          },
+          "vulnerabilities_by_status": {
+            "$ref": "#/components/schemas/VulnerabilityStatusSummary",
+            "description": "Vulnerability counts by triage status."
+          },
+          "total_vulnerabilities": {
+            "type": "integer",
+            "title": "Total Vulnerabilities",
+            "description": "Total vulnerability count across all statuses."
+          },
+          "last_scan_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Scan At",
+            "description": "UTC timestamp of the most recent scan completion."
+          },
+          "risk_score": {
+            "type": "number",
+            "title": "Risk Score",
+            "description": "Weighted risk score (0\u2013100) computed from open vulnerability severity. Critical=10, High=5, Medium=2, Low=1, Info=0."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "workspace_name",
+          "status",
+          "is_overdue",
+          "member_count",
+          "scans",
+          "vulnerabilities_by_severity",
+          "vulnerabilities_by_status",
+          "total_vulnerabilities",
+          "last_scan_at",
+          "risk_score"
+        ],
+        "title": "WorkspaceDashboard",
+        "description": "Aggregated statistics for the workspace dashboard view.\n\nComputed server-side in a single repository call to avoid N+1 queries."
+      },
+      "WorkspaceMemberResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Membership record UUID."
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace UUID."
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id",
+            "description": "Member user UUID."
+          },
+          "role": {
+            "$ref": "#/components/schemas/WorkspaceMemberRole",
+            "description": "Per-workspace role."
+          },
+          "invited_by_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited By Id",
+            "description": "UUID of the inviting user."
+          },
+          "joined_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Joined At",
+            "description": "UTC timestamp when membership was created."
+          },
+          "user_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Email",
+            "description": "Email of the member (loaded via join)."
+          },
+          "user_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Username",
+            "description": "Username of the member (loaded via join)."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "user_id",
+          "role",
+          "invited_by_id",
+          "joined_at"
+        ],
+        "title": "WorkspaceMemberResponse",
+        "description": "Member entry as returned by the API."
+      },
+      "WorkspaceMemberRole": {
+        "type": "string",
+        "enum": [
+          "owner",
+          "member",
+          "viewer"
+        ],
+        "title": "WorkspaceMemberRole",
+        "description": "Per-workspace role governing access within that specific engagement.\n\nValues:\n    OWNER:   Full control: edit workspace, manage members, delete.\n    MEMBER:  Can create scans, triage vulnerabilities, generate reports.\n    VIEWER:  Read-only: can view scans, findings, and reports.\n\nThis is INDEPENDENT of the platform-level ``UserRole``.  A platform\nANALYST who is a workspace VIEWER can only read within that workspace."
+      },
+      "WorkspaceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique identifier."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "UTC creation timestamp."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At",
+            "description": "UTC last-updated timestamp."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Workspace name."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Description."
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name",
+            "description": "Client organisation name."
+          },
+          "client_contact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Contact",
+            "description": "Client contact."
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkspaceStatus",
+            "description": "Lifecycle status."
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Engagement start date."
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Engagement end date."
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived",
+            "description": "Whether the workspace is archived."
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id",
+            "description": "Owner user UUID."
+          },
+          "settings": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Settings",
+            "description": "Workspace-level configuration."
+          },
+          "is_editable": {
+            "type": "boolean",
+            "title": "Is Editable",
+            "description": "Whether the workspace accepts new scans/edits."
+          },
+          "is_overdue": {
+            "type": "boolean",
+            "title": "Is Overdue",
+            "description": "Whether the engagement end date has passed."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "name",
+          "description",
+          "client_name",
+          "client_contact",
+          "status",
+          "start_date",
+          "end_date",
+          "is_archived",
+          "owner_id",
+          "settings",
+          "is_editable",
+          "is_overdue"
+        ],
+        "title": "WorkspaceResponse",
+        "description": "Full workspace representation returned by the API."
+      },
+      "WorkspaceScopeOverview": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "total_rules": {
+            "type": "integer",
+            "title": "Total Rules",
+            "description": "Total number of scope rules (active + inactive)."
+          },
+          "active_allow_rules": {
+            "type": "integer",
+            "title": "Active Allow Rules",
+            "description": "Number of active ALLOW rules."
+          },
+          "active_exclude_rules": {
+            "type": "integer",
+            "title": "Active Exclude Rules",
+            "description": "Number of active EXCLUDE rules."
+          },
+          "inactive_rules": {
+            "type": "integer",
+            "title": "Inactive Rules",
+            "description": "Number of disabled rules."
+          },
+          "has_scope_defined": {
+            "type": "boolean",
+            "title": "Has Scope Defined",
+            "description": "True if at least one active ALLOW rule exists."
+          },
+          "rule_type_breakdown": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Rule Type Breakdown",
+            "description": "Count of active rules per rule type."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "total_rules",
+          "active_allow_rules",
+          "active_exclude_rules",
+          "inactive_rules",
+          "has_scope_defined",
+          "rule_type_breakdown"
+        ],
+        "title": "WorkspaceScopeOverview",
+        "description": "Summary of a workspace's current scope configuration."
+      },
+      "WorkspaceStatus": {
+        "type": "string",
+        "enum": [
+          "active",
+          "completed",
+          "archived"
+        ],
+        "title": "WorkspaceStatus",
+        "description": "Lifecycle status of a workspace/engagement.\n\nValues:\n    ACTIVE:    Engagement is ongoing \u2014 scans can be created and run.\n    COMPLETED: Engagement concluded \u2014 read-only, can still generate reports.\n    ARCHIVED:  Soft-deleted \u2014 hidden from default list views."
+      },
+      "WorkspaceSummary": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WorkspaceStatus"
+          },
+          "is_archived": {
+            "type": "boolean",
+            "title": "Is Archived"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "scan_count": {
+            "type": "integer",
+            "title": "Scan Count",
+            "description": "Total scans in this workspace.",
+            "default": 0
+          },
+          "open_vulnerability_count": {
+            "type": "integer",
+            "title": "Open Vulnerability Count",
+            "description": "Number of open/confirmed vulnerabilities.",
+            "default": 0
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count",
+            "description": "Number of workspace members.",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "client_name",
+          "status",
+          "is_archived",
+          "start_date",
+          "end_date",
+          "owner_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkspaceSummary",
+        "description": "Lightweight workspace representation for list views.\n\nOnly includes fields needed to render a workspace card in the dashboard."
+      },
+      "WorkspaceUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "description": "Updated workspace name."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Updated description."
+          },
+          "client_name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name",
+            "description": "Updated client name."
+          },
+          "client_contact": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Contact",
+            "description": "Updated client contact."
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Updated lifecycle status."
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date",
+            "description": "Updated start date."
+          },
+          "end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End Date",
+            "description": "Updated end date."
+          },
+          "settings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Settings",
+            "description": "Updated workspace settings (full replacement)."
+          }
+        },
+        "type": "object",
+        "title": "WorkspaceUpdate",
+        "description": "Partial update payload for an existing workspace.\n\nAll fields are optional \u2014 only provided fields are updated."
+      }
+    },
+    "securitySchemes": {
+      "JWT": {
+        "type": "http",
+        "description": "JWT Bearer token. Obtain via POST /api/v1/auth/login.",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

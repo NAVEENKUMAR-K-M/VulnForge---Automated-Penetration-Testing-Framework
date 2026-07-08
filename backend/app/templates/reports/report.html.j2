@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Security Assessment Report - {{ workspace.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 { color: #2c3e50; }
+        .header {
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th { background-color: #f4f6f8; }
+        .severity-critical { color: #dc3545; font-weight: bold; }
+        .severity-high { color: #fd7e14; font-weight: bold; }
+        .severity-medium { color: #ffc107; font-weight: bold; }
+        .severity-low { color: #28a745; font-weight: bold; }
+        .severity-info { color: #17a2b8; font-weight: bold; }
+        .poc, .remediation {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-left: 4px solid #6c757d;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Security Assessment Report</h1>
+        <p><strong>Workspace:</strong> {{ workspace.name }}</p>
+        <p><strong>Date Generated:</strong> {{ date }}</p>
+    </div>
+
+    <h2>1. Executive Summary</h2>
+    <ul>
+        <li><strong>Total Assets Discovered:</strong> {{ assets|length }}</li>
+        <li><strong>Total Vulnerabilities Identified:</strong> {{ vulnerabilities|length }}</li>
+        <li><strong>Critical / High Findings:</strong> {{ critical_high_count }}</li>
+    </ul>
+
+    <h2>2. Discovered Assets</h2>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Value</th>
+            <th>Source Tools</th>
+        </tr>
+        {% for asset in assets %}
+        <tr>
+            <td>{{ asset.asset_type.value }}</td>
+            <td>{{ asset.value }}</td>
+            <td>{{ asset.source_tools|join(', ') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>3. Technologies Identified</h2>
+    {% if technologies %}
+    <table>
+        <tr>
+            <th>Asset</th>
+            <th>Category</th>
+            <th>Technologies</th>
+        </tr>
+        {% for tech in technologies %}
+        <tr>
+            <td>{{ tech.asset }}</td>
+            <td>{{ tech.category }}</td>
+            <td>{{ tech.items|join(', ') }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p><em>No specific technologies identified.</em></p>
+    {% endif %}
+
+    <h2>4. Open Ports & Services</h2>
+    {% if ports %}
+    <table>
+        <tr>
+            <th>Host</th>
+            <th>Port</th>
+            <th>Service</th>
+            <th>Version</th>
+            <th>OS</th>
+        </tr>
+        {% for p in ports %}
+        <tr>
+            <td>{{ p.host }}</td>
+            <td>{{ p.port }}</td>
+            <td>{{ p.service }}</td>
+            <td>{{ p.version }}</td>
+            <td>{{ p.os }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p><em>No open ports specifically identified via Nmap metadata.</em></p>
+    {% endif %}
+
+    <h2>5. Vulnerability Findings</h2>
+    {% if vulnerabilities %}
+        {% for vuln in vulnerabilities %}
+        <h3>5.{{ loop.index }}. {{ vuln.title }}</h3>
+        <p>
+            <strong>Severity:</strong> <span class="severity-{{ vuln.severity.value }}">{{ vuln.severity.value|upper }}</span><br>
+            {% if vuln.cvss_score %}<strong>CVSS:</strong> {{ vuln.cvss_score }} ({{ vuln.cvss_vector }})<br>{% endif %}
+            {% if vuln.cve_id %}<strong>CVE:</strong> {{ vuln.cve_id }}<br>{% endif %}
+            <strong>Status:</strong> {{ vuln.status.value|title }}<br>
+            <strong>Affected Asset:</strong> {{ vuln.affected_host or 'N/A' }}{% if vuln.affected_path %}{{ vuln.affected_path }}{% endif %}
+        </p>
+        
+        <p><strong>Description:</strong><br>{{ vuln.description }}</p>
+
+        {% if vuln.proof_of_concept %}
+        <p><strong>Proof of Concept:</strong></p>
+        <div class="poc">{{ vuln.proof_of_concept }}</div>
+        {% endif %}
+
+        {% if vuln.remediation %}
+        <p><strong>Remediation:</strong></p>
+        <div class="remediation">{{ vuln.remediation }}</div>
+        {% endif %}
+        
+        <hr>
+        {% endfor %}
+    {% else %}
+    <p><em>No vulnerabilities identified.</em></p>
+    {% endif %}
+
+    <h2>6. Visual Evidence (Screenshots)</h2>
+    {% if screenshots %}
+    <ul>
+        {% for screenshot in screenshots %}
+        <li><strong>{{ screenshot.asset }}</strong>: Screenshot stored at <code>{{ screenshot.path }}</code></li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p><em>No screenshots captured.</em></p>
+    {% endif %}
+
+</body>
+</html>

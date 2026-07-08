@@ -91,7 +91,7 @@ export const Workspaces: React.FC = () => {
                 {workspaces.map(ws => (
                   <tr key={ws.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="hover:bg-surface-hover">
                     <td style={{ padding: 'var(--space-4) var(--space-3)' }}>
-                      <NavLink to={`/workspaces/${ws.id}`} style={{ fontWeight: 600 }}>{ws.name}</NavLink>
+                      <NavLink to={`/projects/${ws.id}/dashboard`} style={{ fontWeight: 600 }}>{ws.name}</NavLink>
                     </td>
                     <td style={{ padding: 'var(--space-4) var(--space-3)', color: 'var(--text-secondary)' }}>
                       {new Date(ws.created_at).toLocaleDateString()}

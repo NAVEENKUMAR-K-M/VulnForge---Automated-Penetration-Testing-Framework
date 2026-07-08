@@ -1,9 +1,12 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FolderKanban, ShieldAlert, Settings, LogOut, Activity } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 export const Sidebar: React.FC = () => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   return (
     <aside className="v-sidebar glass-panel">
       <div className="v-sidebar-header">
@@ -35,8 +38,8 @@ export const Sidebar: React.FC = () => {
           <span>Settings</span>
         </NavLink>
         <button className="nav-item text-danger" onClick={() => {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
+          logout();
+          navigate('/login');
         }}>
           <LogOut size={18} />
           <span>Logout</span>

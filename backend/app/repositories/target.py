@@ -20,6 +20,7 @@ from app.models.scan import Scan
 from app.models.target import Target, TargetType
 from app.models.target_tag import TargetTag
 from app.models.vulnerability import Vulnerability, VulnerabilityStatus
+from app.models.workspace import WorkspaceTarget
 from app.repositories.base import BaseRepository
 from app.schemas.target import TargetSummary
 
@@ -161,6 +162,10 @@ class TargetRepository(BaseRepository[Target, dict, dict]):
                 Target.id.in_(
                     select(Scan.target_id).where(
                         Scan.workspace_id == workspace_id
+                    ).union(
+                        select(WorkspaceTarget.target_id).where(
+                            WorkspaceTarget.workspace_id == workspace_id
+                        )
                     )
                 )
             )
@@ -408,3 +413,19 @@ class TargetRepository(BaseRepository[Target, dict, dict]):
         """
         tags = await self.get_tags(target_id)
         return [t.tag for t in tags]
+
+    async def link_to_workspace(
+        self,
+        target_id: uuid.UUID,
+        workspace_id: uuid.UUID,
+    ) -> None:
+        """Link a globally deduplicated target to a specific workspace."""
+        from sqlalchemy.dialects.postgresql import insert
+        
+        stmt = insert(WorkspaceTarget).values(
+            workspace_id=workspace_id,
+            target_id=target_id,
+        ).on_conflict_do_nothing(
+            index_elements=["workspace_id", "target_id"]
+        )
+        await self._session.execute(stmt)

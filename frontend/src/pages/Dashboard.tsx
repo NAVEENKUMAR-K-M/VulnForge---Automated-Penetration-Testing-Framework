@@ -6,6 +6,9 @@ import type { Workspace } from '../api/workspaces';
 
 export const Dashboard: React.FC = () => {
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [totalTargets, setTotalTargets] = useState(0);
+  const [totalVulns, setTotalVulns] = useState(0);
+  const [activeScans, setActiveScans] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -13,6 +16,26 @@ export const Dashboard: React.FC = () => {
       try {
         const wsData = await workspacesApi.list();
         setWorkspaces(wsData);
+
+        // Fetch dashboard stats for all workspaces
+        const statsPromises = wsData.map(ws => workspacesApi.getDashboard(ws.id).catch(() => null));
+        const allStats = await Promise.all(statsPromises);
+        
+        let targetsCount = 0;
+        let vulnsCount = 0;
+        
+        allStats.forEach(stat => {
+          if (stat) {
+            targetsCount += stat.targets_count || 0;
+            vulnsCount += stat.open_vulnerabilities_count || 0;
+          }
+        });
+        
+        setTotalTargets(targetsCount);
+        setTotalVulns(vulnsCount);
+        // Active scans would ideally come from the stats too, but keeping 0 for now as scans aren't implemented
+        setActiveScans(0);
+
       } catch (err) {
         console.error("Failed to load dashboard data", err);
       } finally {
@@ -46,7 +69,7 @@ export const Dashboard: React.FC = () => {
           </CardHeader>
           <CardBody>
             <div className="flex-row items-center gap-3">
-              <span className="text-3xl font-bold text-warning">0</span>
+              <span className="text-3xl font-bold text-warning">{isLoading ? '...' : activeScans}</span>
               <Badge variant="warning">In Progress</Badge>
             </div>
           </CardBody>
@@ -56,7 +79,7 @@ export const Dashboard: React.FC = () => {
             <CardTitle>Critical Vulnerabilities</CardTitle>
           </CardHeader>
           <CardBody>
-            <div className="text-3xl font-bold text-danger">0</div>
+            <div className="text-3xl font-bold text-danger">{isLoading ? '...' : totalVulns}</div>
           </CardBody>
         </Card>
       </div>

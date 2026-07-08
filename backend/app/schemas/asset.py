@@ -23,6 +23,7 @@ class AssetCreate(VulnForgeBaseModel):
         max_length=100, 
         description="The machine name of the plugin that discovered this (e.g., 'subfinder')."
     )
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional collected information.")
 
     @field_validator("value")
     @classmethod
@@ -40,4 +41,5 @@ class AssetResponse(TimestampedResponse):
     asset_type: AssetType
     value: str
     source_tools: list[str]
+    metadata_dict: dict[str, Any] = Field(alias="metadata")
     is_active: bool

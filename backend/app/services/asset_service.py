@@ -81,6 +81,7 @@ class AssetService:
                 asset_type=a.asset_type,
                 value=a.value,
                 source_tools=a.source_tools,
+                metadata_dict=a.metadata_dict,
                 is_active=a.is_active,
                 created_at=a.created_at,
                 updated_at=a.updated_at,

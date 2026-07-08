@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from app.models.scan import Scan
     from app.models.scope import ScopeRule
     from app.models.scan_profile import ScanProfile
+    from app.models.target import Target
 
 
 # ── Enumerations ──────────────────────────────────────────────────────────────
@@ -316,3 +317,31 @@ class WorkspaceMember(UUIDPrimaryKeyMixin, Base):
         foreign_keys=[invited_by_id],
         lazy="select",
     )
+
+
+class WorkspaceTarget(TimestampedBase):
+    """Junction table linking global targets to workspaces."""
+
+    __tablename__ = "workspace_targets"
+    __table_args__ = (
+        UniqueConstraint("workspace_id", "target_id", name="uq_workspace_targets_pair"),
+        Index("idx_workspace_targets_workspace_id", "workspace_id"),
+        Index("idx_workspace_targets_target_id", "target_id"),
+    )
+
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("workspaces.id", ondelete="CASCADE", name="fk_workspace_targets_workspaces"),
+        nullable=False,
+        doc="The workspace this target is associated with.",
+    )
+    target_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("targets.id", ondelete="CASCADE", name="fk_workspace_targets_targets"),
+        nullable=False,
+        doc="The global target associated with the workspace.",
+    )
+
+    # ── Relationships ─────────────────────────────────────────────────────────
+    workspace: Mapped[Workspace] = relationship("Workspace")
+    target: Mapped[Target] = relationship("Target")
