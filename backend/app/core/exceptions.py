@@ -108,6 +108,24 @@ class PermissionDeniedError(VulnForgeError):
     message: str = "You do not have permission to perform this action."
 
 
+class ScopeViolationError(VulnForgeError):
+    """Raised when a scan target is outside the workspace's authorized scope.
+
+    Distinct from PermissionDeniedError — this is a scope/authorization check
+    failure, not an RBAC failure.  Carries the scope engine's reason string.
+
+    Args:
+        reason: Human-readable explanation from the scope engine.
+    """
+
+    status_code: int = HTTPStatus.FORBIDDEN
+    message: str = "Target is outside the authorized scope for this workspace."
+
+    def __init__(self, reason: str | None = None) -> None:
+        self.message = reason or self.__class__.message
+        super(VulnForgeError, self).__init__(self.message)
+
+
 # ── Resource Exceptions ────────────────────────────────────────────────────────
 
 class NotFoundError(VulnForgeError):

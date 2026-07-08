@@ -37,6 +37,7 @@ from app.models.workspace import (
     WorkspaceMemberRole,
     WorkspaceStatus,
 )
+from app.models.scope import ScopeRule, ScopeRuleType, ScopeDisposition
 
 __all__ = [
     # Base
@@ -79,4 +80,8 @@ __all__ = [
     "WorkspaceMember",
     "WorkspaceMemberRole",
     "WorkspaceStatus",
+    # Scope
+    "ScopeRule",
+    "ScopeRuleType",
+    "ScopeDisposition",
 ]

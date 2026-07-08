@@ -84,6 +84,13 @@ class AuditAction:
     WORKSPACE_MEMBER_REMOVED: str = "workspace.member.removed"
     WORKSPACE_MEMBER_ROLE_CHANGED: str = "workspace.member.role_changed"
 
+    # Scope Rules
+    SCOPE_RULE_CREATED: str = "scope.rule.created"
+    SCOPE_RULE_UPDATED: str = "scope.rule.updated"
+    SCOPE_RULE_DELETED: str = "scope.rule.deleted"
+    SCOPE_RULES_BULK_IMPORTED: str = "scope.rules.bulk_imported"
+    SCOPE_CHECK_FAILED: str = "scope.check.failed"
+
 
 # ── Role Hierarchy ────────────────────────────────────────────────────────────
 
@@ -122,3 +129,4 @@ API_VULNERABILITIES_TAG: str = "vulnerabilities"
 API_REPORTS_TAG: str = "reports"
 API_PLUGINS_TAG: str = "plugins"
 API_WORKSPACES_TAG: str = "workspaces"
+API_SCOPE_TAG: str = "scope"

@@ -50,6 +50,7 @@ from app.models.base import Base, TimestampedBase, UUIDPrimaryKeyMixin
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.scan import Scan
+    from app.models.scope import ScopeRule
 
 
 # ── Enumerations ──────────────────────────────────────────────────────────────
@@ -196,6 +197,12 @@ class Workspace(TimestampedBase):
     scans: Mapped[list[Scan]] = relationship(
         "Scan",
         back_populates="workspace",
+        lazy="select",
+    )
+    scope_rules: Mapped[list[ScopeRule]] = relationship(
+        "ScopeRule",
+        back_populates="workspace",
+        cascade="all, delete-orphan",
         lazy="select",
     )
 
