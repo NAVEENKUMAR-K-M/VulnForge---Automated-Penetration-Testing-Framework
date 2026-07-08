@@ -84,7 +84,7 @@ class Target(TimestampedBase):
         doc="Optional detailed description of the target asset.",
     )
     target_type: Mapped[TargetType] = mapped_column(
-        Enum(TargetType, name="target_type_enum"),
+        Enum(TargetType, values_callable=lambda obj: [e.value for e in obj], name="target_type_enum"),
         nullable=False,
         index=True,
         doc="Asset classification: host | network | url | domain.",

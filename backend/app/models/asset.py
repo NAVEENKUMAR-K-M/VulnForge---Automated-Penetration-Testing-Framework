@@ -83,7 +83,7 @@ class DiscoveredAsset(TimestampedBase):
         doc="The scan that first discovered this asset.",
     )
     asset_type: Mapped[AssetType] = mapped_column(
-        Enum(AssetType, name="asset_type_enum"),
+        Enum(AssetType, values_callable=lambda obj: [e.value for e in obj], name="asset_type_enum"),
         nullable=False,
     )
     value: Mapped[str] = mapped_column(

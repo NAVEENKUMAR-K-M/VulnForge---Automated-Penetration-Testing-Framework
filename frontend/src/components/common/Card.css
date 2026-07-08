@@ -1,0 +1,30 @@
+.v-card {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.v-card-solid {
+  background: var(--bg-surface-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.v-card-header {
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.v-card-title {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.v-card-body {
+  padding: var(--space-5);
+  flex: 1;
+}

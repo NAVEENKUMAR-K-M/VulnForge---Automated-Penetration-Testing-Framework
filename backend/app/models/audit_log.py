@@ -107,7 +107,7 @@ class AuditLog(UUIDPrimaryKeyMixin, Base):
         doc="Action-specific context payload (before/after values, error codes, etc.).",
     )
     outcome: Mapped[AuditOutcome] = mapped_column(
-        Enum(AuditOutcome, name="audit_outcome_enum"),
+        Enum(AuditOutcome, values_callable=lambda obj: [e.value for e in obj], name="audit_outcome_enum"),
         nullable=False,
         doc="Outcome of the audited action: success | failure.",
     )

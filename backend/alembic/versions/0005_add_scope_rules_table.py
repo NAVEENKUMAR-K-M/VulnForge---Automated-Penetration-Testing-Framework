@@ -23,7 +23,7 @@ from sqlalchemy.dialects import postgresql
 # ── Revision identifiers ──────────────────────────────────────────────────────
 
 revision: str = "0005"
-down_revision: str = "0004"
+down_revision: str = "0004_add_workspace_id_to_scans"
 branch_labels = None
 depends_on = None
 
@@ -37,13 +37,13 @@ def upgrade() -> None:
         "wildcard",
         "host",
         name="scope_rule_type_enum",
-        create_type=True,
+        create_type=False,
     )
     scope_disposition_enum = postgresql.ENUM(
         "allow",
         "exclude",
         name="scope_disposition_enum",
-        create_type=True,
+        create_type=False,
     )
     scope_rule_type_enum.create(op.get_bind(), checkfirst=True)
     scope_disposition_enum.create(op.get_bind(), checkfirst=True)
@@ -159,7 +159,7 @@ def upgrade() -> None:
     op.execute("""
         CREATE TRIGGER trg_scope_rules_updated_at
         BEFORE UPDATE ON scope_rules
-        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     """)
 
 

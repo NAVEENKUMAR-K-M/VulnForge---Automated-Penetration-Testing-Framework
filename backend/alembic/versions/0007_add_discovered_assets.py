@@ -34,7 +34,7 @@ def upgrade() -> None:
         "cloud_resource",
         "other",
         name="asset_type_enum",
-        create_type=True,
+        create_type=False,
     )
     asset_type_enum.create(op.get_bind(), checkfirst=True)
 
@@ -134,7 +134,7 @@ def upgrade() -> None:
     op.execute("""
         CREATE TRIGGER trg_discovered_assets_updated_at
         BEFORE UPDATE ON discovered_assets
-        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     """)
 
 

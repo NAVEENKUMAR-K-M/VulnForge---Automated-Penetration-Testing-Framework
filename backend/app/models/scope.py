@@ -145,12 +145,12 @@ class ScopeRule(TimestampedBase):
         doc="FK to the workspace this rule is scoped to.",
     )
     rule_type: Mapped[ScopeRuleType] = mapped_column(
-        Enum(ScopeRuleType, name="scope_rule_type_enum"),
+        Enum(ScopeRuleType, values_callable=lambda obj: [e.value for e in obj], name="scope_rule_type_enum"),
         nullable=False,
         doc="Matching strategy for this scope rule.",
     )
     disposition: Mapped[ScopeDisposition] = mapped_column(
-        Enum(ScopeDisposition, name="scope_disposition_enum"),
+        Enum(ScopeDisposition, values_callable=lambda obj: [e.value for e in obj], name="scope_disposition_enum"),
         nullable=False,
         default=ScopeDisposition.ALLOW,
         server_default=ScopeDisposition.ALLOW.value,

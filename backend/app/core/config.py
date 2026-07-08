@@ -219,7 +219,7 @@ class Settings(BaseSettings):
 
     # ── First Superuser (seeded on first run) ─────────────────────────────────
     first_superuser_email: str = Field(
-        default="admin@vulnforge.local",
+        default="admin@vulnforge.com",
         description="Email of the initial superuser account.",
     )
     first_superuser_password: str = Field(

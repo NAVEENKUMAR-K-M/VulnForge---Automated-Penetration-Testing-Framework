@@ -96,7 +96,7 @@ class User(TimestampedBase):
         doc="Optional full display name used in reports.",
     )
     role: Mapped[UserRole] = mapped_column(
-        Enum(UserRole, name="user_role_enum"),
+        Enum(UserRole, values_callable=lambda obj: [e.value for e in obj], name="user_role_enum"),
         nullable=False,
         default=UserRole.VIEWER,
         server_default=UserRole.VIEWER.value,

@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+venv*/
+.tox/
+.pytest_cache/
+.coverage
+htmlcov/
+vulnforge.egg-info/
+.env
+.git
+.gitignore

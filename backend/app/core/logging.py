@@ -102,7 +102,7 @@ def configure_logging(log_level: str = "INFO", log_format: str = "CONSOLE") -> N
             logging.getLevelName(log_level)
         ),
         context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 

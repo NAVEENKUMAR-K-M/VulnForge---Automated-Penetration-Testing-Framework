@@ -136,7 +136,7 @@ class Scan(TimestampedBase):
         doc="Optional context about the scan purpose and methodology.",
     )
     status: Mapped[ScanStatus] = mapped_column(
-        Enum(ScanStatus, name="scan_status_enum"),
+        Enum(ScanStatus, values_callable=lambda obj: [e.value for e in obj], name="scan_status_enum"),
         nullable=False,
         default=ScanStatus.PENDING,
         server_default=ScanStatus.PENDING.value,
@@ -163,13 +163,13 @@ class Scan(TimestampedBase):
         doc="FK to the analyst assigned to review findings.",
     )
     scan_type: Mapped[ScanType] = mapped_column(
-        Enum(ScanType, name="scan_type_enum"),
+        Enum(ScanType, values_callable=lambda obj: [e.value for e in obj], name="scan_type_enum"),
         nullable=False,
         index=True,
         doc="Which PTES phases to execute.",
     )
     priority: Mapped[Priority] = mapped_column(
-        Enum(Priority, name="priority_enum"),
+        Enum(Priority, values_callable=lambda obj: [e.value for e in obj], name="priority_enum"),
         nullable=False,
         default=Priority.MEDIUM,
         server_default=Priority.MEDIUM.value,

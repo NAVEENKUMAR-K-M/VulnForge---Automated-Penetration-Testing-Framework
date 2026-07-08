@@ -145,7 +145,7 @@ class Workspace(TimestampedBase):
         doc="Primary contact name or email at the client organisation.",
     )
     status: Mapped[WorkspaceStatus] = mapped_column(
-        Enum(WorkspaceStatus, name="workspace_status_enum"),
+        Enum(WorkspaceStatus, values_callable=lambda obj: [e.value for e in obj], name="workspace_status_enum"),
         nullable=False,
         default=WorkspaceStatus.ACTIVE,
         server_default=WorkspaceStatus.ACTIVE.value,
@@ -282,7 +282,7 @@ class WorkspaceMember(UUIDPrimaryKeyMixin, Base):
         doc="FK to the member user.",
     )
     role: Mapped[WorkspaceMemberRole] = mapped_column(
-        Enum(WorkspaceMemberRole, name="workspace_member_role_enum"),
+        Enum(WorkspaceMemberRole, values_callable=lambda obj: [e.value for e in obj], name="workspace_member_role_enum"),
         nullable=False,
         doc="Per-workspace access level for this member.",
     )

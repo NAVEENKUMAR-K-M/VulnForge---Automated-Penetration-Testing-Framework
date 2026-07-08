@@ -15,6 +15,7 @@ from app.models.asset import AssetType
 from app.schemas.asset import AssetResponse
 from app.schemas.common import PaginatedResponse
 from app.services.asset_service import AssetService
+from app.api.deps import SettingsDep
 
 router = APIRouter(
     prefix="/workspaces/{workspace_id}/assets",
@@ -22,8 +23,8 @@ router = APIRouter(
 )
 
 
-async def get_asset_service(db: DatabaseDep) -> AssetService:
-    return AssetService(db=db)
+async def get_asset_service(db: DatabaseDep, settings: SettingsDep) -> AssetService:
+    return AssetService(db=db, settings=settings)
 
 
 AssetServiceDep = Annotated[AssetService, Depends(get_asset_service)]

@@ -80,7 +80,7 @@ class Plugin(TimestampedBase):
         doc="Semantic version of the plugin (e.g., '1.2.3').",
     )
     phase: Mapped[PluginPhase] = mapped_column(
-        Enum(PluginPhase, name="plugin_phase_enum"),
+        Enum(PluginPhase, values_callable=lambda obj: [e.value for e in obj], name="plugin_phase_enum"),
         nullable=False,
         index=True,
         doc="PTES phase: reconnaissance | vulnerability_scanning | exploitation | post_exploitation.",

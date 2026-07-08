@@ -15,15 +15,16 @@ from app.repositories.asset import AssetRepository
 from app.schemas.asset import AssetCreate, AssetResponse
 from app.schemas.common import PaginatedResponse
 from app.services.workspace_service import WorkspaceService
+from app.core.config import Settings
 
 
 class AssetService:
     """Orchestrates asset management and deduplication."""
 
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(self, db: AsyncSession, settings: Settings) -> None:
         self._db = db
         self._repo = AssetRepository(db)
-        self._workspace_svc = WorkspaceService(db)
+        self._workspace_svc = WorkspaceService(db, settings)
 
     async def ingest_assets(
         self,
@@ -57,8 +58,8 @@ class AssetService:
         page_size: int = 20,
     ) -> PaginatedResponse[AssetResponse]:
         """List active assets in a workspace (requires VIEWER)."""
-        await self._workspace_svc.assert_membership(
-            workspace_id=workspace_id, user_id=current_user.id
+        await self._workspace_svc.get_workspace(
+            workspace_id=workspace_id, current_user=current_user
         )
 
         offset = (page - 1) * page_size
@@ -98,13 +99,19 @@ class AssetService:
         current_user: User,
     ) -> None:
         """Soft-delete an asset (requires ANALYST)."""
-        member = await self._workspace_svc.assert_membership(
-            workspace_id=workspace_id, user_id=current_user.id
+        await self._workspace_svc.get_workspace(
+            workspace_id=workspace_id, current_user=current_user
         )
-        if not member.role.can_write():
-            raise PermissionDeniedError(
-                "Only Analysts or Owners can delete assets."
-            )
+        
+        if not current_user.is_superuser:
+            from app.models.user import UserRole
+            if current_user.role not in {UserRole.ADMIN}:
+                from app.repositories.workspace import WorkspaceRepository
+                membership = await WorkspaceRepository(self._db).get_membership(workspace_id, current_user.id)
+                if not membership or not membership.role.can_write():
+                    raise PermissionDeniedError(
+                        "Only Analysts or Owners can delete assets."
+                    )
 
         asset = await self._repo.get_by_id(asset_id)
         if not asset or asset.workspace_id != workspace_id:

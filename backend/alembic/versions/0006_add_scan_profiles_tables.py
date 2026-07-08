@@ -34,7 +34,7 @@ def upgrade() -> None:
         "web_assessment",
         "custom",
         name="profile_type_enum",
-        create_type=True,
+        create_type=False,
     )
     profile_type_enum.create(op.get_bind(), checkfirst=True)
 
@@ -165,7 +165,7 @@ def upgrade() -> None:
     op.execute("""
         CREATE TRIGGER trg_scan_profiles_updated_at
         BEFORE UPDATE ON scan_profiles
-        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     """)
 
     # ── Create scan_profile_plugins table ─────────────────────────────────────
@@ -251,7 +251,7 @@ def upgrade() -> None:
     op.execute("""
         CREATE TRIGGER trg_scan_profile_plugins_updated_at
         BEFORE UPDATE ON scan_profile_plugins
-        FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     """)
 
 

@@ -148,7 +148,7 @@ class ScanProfile(TimestampedBase):
         doc="Human-readable profile name (e.g., 'Q1 External Assessment').",
     )
     profile_type: Mapped[ProfileType] = mapped_column(
-        Enum(ProfileType, name="profile_type_enum"),
+        Enum(ProfileType, values_callable=lambda obj: [e.value for e in obj], name="profile_type_enum"),
         nullable=False,
         doc="Classification of this profile.",
     )
@@ -194,14 +194,14 @@ class ScanProfile(TimestampedBase):
         doc="Creator. NULL for builtin profiles.",
     )
     default_scan_type: Mapped[ScanType] = mapped_column(
-        Enum(ScanType, name="scan_type_enum"),
+        Enum(ScanType, values_callable=lambda obj: [e.value for e in obj], name="scan_type_enum"),
         nullable=False,
         default=ScanType.FULL,
         server_default=ScanType.FULL.value,
         doc="The scan_type applied to scans created from this profile.",
     )
     default_priority: Mapped[Priority] = mapped_column(
-        Enum(Priority, name="priority_enum"),
+        Enum(Priority, values_callable=lambda obj: [e.value for e in obj], name="priority_enum"),
         nullable=False,
         default=Priority.MEDIUM,
         server_default=Priority.MEDIUM.value,

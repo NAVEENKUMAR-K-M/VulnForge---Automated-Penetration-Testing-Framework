@@ -53,7 +53,7 @@ def upgrade() -> None:
         sa.Column("client_contact", sa.String(200), nullable=True),
         sa.Column(
             "status",
-            sa.Enum("active", "completed", "archived", name="workspace_status_enum"),
+            workspace_status_enum,
             nullable=False,
             server_default="active",
         ),
@@ -125,7 +125,7 @@ def upgrade() -> None:
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column(
             "role",
-            sa.Enum("owner", "member", "viewer", name="workspace_member_role_enum"),
+            workspace_member_role_enum,
             nullable=False,
         ),
         sa.Column("invited_by_id", postgresql.UUID(as_uuid=True), nullable=True),

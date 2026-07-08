@@ -89,18 +89,18 @@ class Report(TimestampedBase):
         doc="Optional context note about this report's purpose or audience.",
     )
     report_type: Mapped[ReportType] = mapped_column(
-        Enum(ReportType, name="report_type_enum"),
+        Enum(ReportType, values_callable=lambda obj: [e.value for e in obj], name="report_type_enum"),
         nullable=False,
         index=True,
         doc="Report type: executive_summary | technical | compliance.",
     )
     format: Mapped[ReportFormat] = mapped_column(
-        Enum(ReportFormat, name="report_format_enum"),
+        Enum(ReportFormat, values_callable=lambda obj: [e.value for e in obj], name="report_format_enum"),
         nullable=False,
         doc="Output format: html | pdf | json.",
     )
     status: Mapped[ReportStatus] = mapped_column(
-        Enum(ReportStatus, name="report_status_enum"),
+        Enum(ReportStatus, values_callable=lambda obj: [e.value for e in obj], name="report_status_enum"),
         nullable=False,
         default=ReportStatus.PENDING,
         server_default=ReportStatus.PENDING.value,

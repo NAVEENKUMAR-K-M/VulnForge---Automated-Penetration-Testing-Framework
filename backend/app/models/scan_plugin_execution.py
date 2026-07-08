@@ -88,7 +88,7 @@ class ScanPluginExecution(TimestampedBase):
         doc="FK to the plugin registry entry.",
     )
     status: Mapped[PluginExecutionStatus] = mapped_column(
-        Enum(PluginExecutionStatus, name="plugin_exec_status_enum"),
+        Enum(PluginExecutionStatus, values_callable=lambda obj: [e.value for e in obj], name="plugin_exec_status_enum"),
         nullable=False,
         default=PluginExecutionStatus.PENDING,
         server_default=PluginExecutionStatus.PENDING.value,
