@@ -205,6 +205,12 @@ class User(TimestampedBase):
         back_populates="user",
         lazy="select",
     )
+    created_targets: Mapped[list[Target]] = relationship(
+        "Target",
+        foreign_keys="Target.created_by_id",
+        back_populates="created_by",
+        lazy="select",
+    )
 
     @property
     def is_locked(self) -> bool:
