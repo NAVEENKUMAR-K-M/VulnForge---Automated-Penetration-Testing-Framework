@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.api.v1 import auth, workspaces, targets, scope, scan_profiles
+from app.api.v1 import auth, workspaces, targets, scope, scan_profiles, assets
 
 router = APIRouter(prefix="/v1")
 
@@ -17,6 +17,7 @@ router.include_router(workspaces.router)
 router.include_router(targets.router)
 router.include_router(scope.router)
 router.include_router(scan_profiles.router)
+router.include_router(assets.router)
 # router.include_router(scans.router)
 # router.include_router(vulnerabilities.router)
 # router.include_router(reports.router)

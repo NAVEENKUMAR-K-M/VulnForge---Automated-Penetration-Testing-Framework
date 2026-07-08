@@ -18,7 +18,7 @@ import asyncio
 from typing import Any
 
 from app.core.logging import get_logger
-from app.schemas.plugin import PluginExecutionResult, PluginManifest
+from app.schemas.plugin import PluginExecutionResult, PluginManifest, ParsedResults
 from app.schemas.vulnerability import VulnerabilityCreate
 
 logger = get_logger(__name__)
@@ -81,8 +81,8 @@ class BasePlugin(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def parse_results(self, raw_output: str) -> list[VulnerabilityCreate]:
-        """Translate tool-specific raw output into VulnForge vulnerability records.
+    def parse_results(self, raw_output: str) -> ParsedResults:
+        """Translate tool-specific raw output into VulnForge records.
 
         This method is purely synchronous and computationally focused.
 
@@ -90,7 +90,7 @@ class BasePlugin(abc.ABC):
             raw_output: The `raw_output` field from the PluginExecutionResult.
 
         Returns:
-            list[VulnerabilityCreate]: Structured findings.
+            ParsedResults: Structured findings (vulnerabilities and assets).
         """
         pass
 

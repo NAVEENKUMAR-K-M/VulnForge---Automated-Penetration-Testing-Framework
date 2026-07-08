@@ -66,3 +66,11 @@ class PluginResponse(TimestampedResponse):
     module_path: str
     default_config: dict[str, Any]
     plugin_metadata: dict[str, Any]
+
+
+class ParsedResults(VulnForgeBaseModel):
+    """The final parsed output from a plugin execution."""
+    
+    vulnerabilities: list[Any] = Field(default_factory=list, description="List of VulnerabilityCreate objects.")
+    assets: list[Any] = Field(default_factory=list, description="List of AssetCreate objects.")
+

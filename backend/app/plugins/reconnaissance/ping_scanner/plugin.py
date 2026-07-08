@@ -11,7 +11,7 @@ import re
 
 from app.core.plugin_base import BasePlugin
 from app.models.plugin import PluginPhase
-from app.schemas.plugin import PluginExecutionResult, PluginManifest
+from app.schemas.plugin import PluginExecutionResult, PluginManifest, ParsedResults
 from app.schemas.vulnerability import Severity, VulnerabilityCreate
 
 
@@ -55,7 +55,7 @@ class PingPlugin(BasePlugin):
         # Use the base class subprocess helper
         return await self._run_subprocess(cmd, timeout=30)
 
-    def parse_results(self, raw_output: str) -> list[VulnerabilityCreate]:
+    def parse_results(self, raw_output: str) -> ParsedResults:
         """Parse ping output to determine if host is alive.
         
         Note: Being "alive" isn't really a vulnerability, but we map it to an 
@@ -81,4 +81,4 @@ class PingPlugin(BasePlugin):
             )
             findings.append(finding)
 
-        return findings
+        return ParsedResults(vulnerabilities=findings, assets=[])
