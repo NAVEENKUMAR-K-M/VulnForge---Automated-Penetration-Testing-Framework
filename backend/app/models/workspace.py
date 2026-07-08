@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from app.models.user import User
     from app.models.scan import Scan
     from app.models.scope import ScopeRule
+    from app.models.scan_profile import ScanProfile
 
 
 # ── Enumerations ──────────────────────────────────────────────────────────────
@@ -201,6 +202,13 @@ class Workspace(TimestampedBase):
     )
     scope_rules: Mapped[list[ScopeRule]] = relationship(
         "ScopeRule",
+        back_populates="workspace",
+        cascade="all, delete-orphan",
+        lazy="select",
+    )
+    scan_profiles: Mapped[list[ScanProfile]] = relationship(
+        "ScanProfile",
+        foreign_keys="ScanProfile.workspace_id",
         back_populates="workspace",
         cascade="all, delete-orphan",
         lazy="select",

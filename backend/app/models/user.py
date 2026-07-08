@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from app.models.vulnerability_note import VulnerabilityNote
     from app.models.audit_log import AuditLog
     from app.models.workspace import Workspace, WorkspaceMember
+    from app.models.scan_profile import ScanProfile
 
 
 class UserRole(str, enum.Enum):
@@ -208,6 +209,12 @@ class User(TimestampedBase):
     created_targets: Mapped[list[Target]] = relationship(
         "Target",
         foreign_keys="Target.created_by_id",
+        back_populates="created_by",
+        lazy="select",
+    )
+    scan_profiles: Mapped[list[ScanProfile]] = relationship(
+        "ScanProfile",
+        foreign_keys="ScanProfile.created_by_id",
         back_populates="created_by",
         lazy="select",
     )

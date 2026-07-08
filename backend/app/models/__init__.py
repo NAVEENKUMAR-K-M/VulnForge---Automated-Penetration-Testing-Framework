@@ -38,6 +38,7 @@ from app.models.workspace import (
     WorkspaceStatus,
 )
 from app.models.scope import ScopeRule, ScopeRuleType, ScopeDisposition
+from app.models.scan_profile import ScanProfile, ScanProfilePlugin, ProfileType
 
 __all__ = [
     # Base
@@ -84,4 +85,8 @@ __all__ = [
     "ScopeRule",
     "ScopeRuleType",
     "ScopeDisposition",
+    # Scan Profiles
+    "ScanProfile",
+    "ScanProfilePlugin",
+    "ProfileType",
 ]

@@ -91,6 +91,15 @@ class AuditAction:
     SCOPE_RULES_BULK_IMPORTED: str = "scope.rules.bulk_imported"
     SCOPE_CHECK_FAILED: str = "scope.check.failed"
 
+    # Scan Profiles
+    PROFILE_CREATED: str = "profile.created"
+    PROFILE_UPDATED: str = "profile.updated"
+    PROFILE_DELETED: str = "profile.deleted"
+    PROFILE_CLONED: str = "profile.cloned"
+    PROFILE_PLUGIN_ADDED: str = "profile.plugin.added"
+    PROFILE_PLUGIN_REMOVED: str = "profile.plugin.removed"
+    PROFILE_PLUGIN_UPDATED: str = "profile.plugin.updated"
+
 
 # ── Role Hierarchy ────────────────────────────────────────────────────────────
 
@@ -130,3 +139,4 @@ API_REPORTS_TAG: str = "reports"
 API_PLUGINS_TAG: str = "plugins"
 API_WORKSPACES_TAG: str = "workspaces"
 API_SCOPE_TAG: str = "scope"
+API_PROFILES_TAG: str = "scan-profiles"
