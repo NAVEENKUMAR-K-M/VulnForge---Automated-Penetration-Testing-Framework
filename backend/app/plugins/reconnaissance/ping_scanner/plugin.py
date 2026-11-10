@@ -12,7 +12,8 @@ import re
 from app.core.plugin_base import BasePlugin
 from app.models.plugin import PluginPhase
 from app.schemas.plugin import PluginExecutionResult, PluginManifest, ParsedResults
-from app.schemas.vulnerability import Severity, VulnerabilityCreate
+from app.models.vulnerability import VulnerabilitySeverity
+from app.schemas.vulnerability import VulnerabilityCreate
 
 
 class PingPlugin(BasePlugin):
@@ -72,12 +73,12 @@ class PingPlugin(BasePlugin):
 
             finding = VulnerabilityCreate(
                 title=f"Host is Alive (ICMP): {self.target}",
-                severity=Severity.INFORMATIONAL,
+                severity=VulnerabilitySeverity.INFO,
                 description=f"The host {self.target} responded to ICMP echo requests.\n\nLatency: {latency}ms",
                 remediation="No remediation required. This is an informational finding.",
                 cvss_score=0.0,
                 cve_id=None,
-                proof=raw_output,
+                proof_of_concept=raw_output,
             )
             findings.append(finding)
 

@@ -1,7 +1,7 @@
 # ==========================================
 # Base Stage
 # ==========================================
-FROM python:3.11-bullseye as base
+FROM python:3.11-bookworm as base
 
 WORKDIR /app
 
@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     nmap \
+    iputils-ping \
     wkhtmltopdf \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

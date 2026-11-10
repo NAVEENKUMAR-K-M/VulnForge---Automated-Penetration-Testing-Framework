@@ -69,6 +69,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Seed first superuser if the DB is fresh
     await _seed_superuser(settings)
 
+    # Register on-disk plugins into the plugin registry so scans can resolve them
+    await _sync_plugins()
+
     logger.info("vulnforge.ready", port=settings.api_port)
 
     # ── Hand control to FastAPI ────────────────────────────────────────────────
@@ -122,3 +125,22 @@ async def _seed_superuser(settings: object) -> None:
             )
     except Exception as exc:  # noqa: BLE001
         get_logger(__name__).warning("seed.superuser_failed", error=str(exc))
+
+
+async def _sync_plugins() -> None:
+    """Discover on-disk plugins and upsert them into the plugin registry.
+
+    Idempotent — runs on every startup.  Plugins found on disk are inserted or
+    updated; registry rows no longer present on disk are disabled.  Without this
+    the ``plugins`` table stays empty and scans cannot resolve any plugin set.
+    """
+    from app.core.plugin_registry import PluginRegistry
+    from app.database.session import get_db
+
+    logger = get_logger(__name__)
+    try:
+        async for db in get_db():
+            await PluginRegistry(db).sync()
+            logger.info("plugins.synced")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("plugins.sync_failed", error=str(exc))
