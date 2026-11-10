@@ -69,7 +69,7 @@ export const KnowledgeBase: React.FC = () => {
           <StatCard label="Writeups" value={stats.total_writeups} icon={<BookOpen className="w-5 h-5" />} tone="primary" />
           <StatCard label="Chunks" value={stats.total_chunks} icon={<Database className="w-5 h-5" />} />
           <StatCard label="Sources" value={Object.keys(stats.by_source).length} />
-          <StatCard label="Embedding model" value={<span className="data text-base">{stats.embedding_model}</span>} />
+          <StatCard label="Embedding model" value={<span className="data text-sm leading-snug break-words block">{stats.embedding_model}</span>} />
         </div>
       )}
 

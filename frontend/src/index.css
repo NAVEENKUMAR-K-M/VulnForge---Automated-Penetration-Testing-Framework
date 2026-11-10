@@ -9,15 +9,15 @@
 */
 @theme {
   /* Surfaces */
-  --color-base: #0A0D13;
-  --color-surface: #11151E;
-  --color-surface-solid: #11151E;
-  --color-surface-hover: #1A2130;
-  --color-elevated: #151B26;
+  --color-base: #090C12;
+  --color-surface: #141925;
+  --color-surface-solid: #141925;
+  --color-surface-hover: #1E2534;
+  --color-elevated: #1A2030;
 
   /* Lines */
-  --color-border-color: #222A38;
-  --color-border-hover: #303B4E;
+  --color-border-color: #2B3547;
+  --color-border-hover: #3B4860;
 
   /* Text */
   --color-text-primary: #E8ECF4;
@@ -54,12 +54,12 @@
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --bg-base: #0A0D13;
-  --bg-surface: #11151E;
-  --bg-surface-solid: #11151E;
-  --bg-surface-hover: #1A2130;
-  --border-color: #222A38;
-  --border-color-hover: #303B4E;
+  --bg-base: #090C12;
+  --bg-surface: #141925;
+  --bg-surface-solid: #141925;
+  --bg-surface-hover: #1E2534;
+  --border-color: #2B3547;
+  --border-color-hover: #3B4860;
   --text-primary: #E8ECF4;
   --text-secondary: #94A1B8;
   --text-muted: #5C6678;
@@ -73,13 +73,15 @@
   --radius-full: 9999px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+/* NOTE: do not add an unlayered universal margin/padding reset here. In
+   Tailwind v4, unlayered rules override the utility layer and would cancel
+   the spacing utilities. Tailwind preflight already handles the reset. */
 
 html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background-color: #0A0D13;
+  background-color: #090C12;
   color: #E8ECF4;
   line-height: 1.55;
   font-size: 14px;
@@ -131,11 +133,14 @@ code, kbd, pre, .mono { font-family: var(--font-mono); }
 ::-webkit-scrollbar-thumb { background: #222A38; border-radius: 9999px; border: 2px solid #0A0D13; }
 ::-webkit-scrollbar-thumb:hover { background: #303B4E; }
 
-/* Reusable surface panel */
+/* Reusable surface panel — subtle elevation so cards read as distinct surfaces */
 .panel {
-  background: var(--bg-surface);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 80px),
+    var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
 }
 
 /* Reduced motion */
