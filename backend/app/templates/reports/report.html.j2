@@ -59,6 +59,11 @@
         <li><strong>Total Vulnerabilities Identified:</strong> {{ vulnerabilities|length }}</li>
         <li><strong>Critical / High Findings:</strong> {{ critical_high_count }}</li>
     </ul>
+    {% if ai_summary %}
+    <div class="ai-summary">
+        {% for para in ai_summary.split('\n\n') %}{% if para.strip() %}<p>{{ para.strip() }}</p>{% endif %}{% endfor %}
+    </div>
+    {% endif %}
 
     <h2>2. Discovered Assets</h2>
     <table>

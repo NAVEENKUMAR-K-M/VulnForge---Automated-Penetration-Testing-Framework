@@ -46,6 +46,8 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - RAG_INGEST_SOURCES=${RAG_INGEST_SOURCES:-github_advisories}
+      - LLM_PROVIDER=${LLM_PROVIDER:-cli}
+      - LLM_CLI_COMMAND=${LLM_CLI_COMMAND:-claude}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db
@@ -77,6 +79,8 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - RAG_INGEST_SOURCES=${RAG_INGEST_SOURCES:-github_advisories}
+      - LLM_PROVIDER=${LLM_PROVIDER:-cli}
+      - LLM_CLI_COMMAND=${LLM_CLI_COMMAND:-claude}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db
@@ -107,6 +111,8 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN:-}
       - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - RAG_INGEST_SOURCES=${RAG_INGEST_SOURCES:-github_advisories}
+      - LLM_PROVIDER=${LLM_PROVIDER:-cli}
+      - LLM_CLI_COMMAND=${LLM_CLI_COMMAND:-claude}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db

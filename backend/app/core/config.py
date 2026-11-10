@@ -303,6 +303,30 @@ class Settings(BaseSettings):
         description="Optional HackerOne API token for authenticated Hacktivity access.",
     )
 
+    # ── LLM (generation: summaries, agent reasoning) ──────────────────────────
+    llm_provider: str = Field(
+        default="cli",
+        description="Generation backend: 'cli' (subprocess) or 'none' (disabled -> fallback).",
+    )
+    llm_cli_command: str = Field(
+        default="claude",
+        description="CLI binary for generation (e.g. 'claude', 'codex'). Reads prompt on stdin.",
+    )
+    llm_cli_args: str = Field(
+        default="-p",
+        description="Space-separated extra args passed to the LLM CLI.",
+    )
+    llm_cli_timeout: int = Field(
+        default=120,
+        ge=5,
+        description="Seconds before an LLM CLI call is killed.",
+    )
+    ai_summary_enabled: bool = Field(
+        default=True,
+        description="Generate an AI executive summary in reports (falls back to a "
+        "deterministic summary if no LLM is available).",
+    )
+
     # ── Validators ────────────────────────────────────────────────────────────
     @field_validator("allowed_origins", mode="before")
     @classmethod

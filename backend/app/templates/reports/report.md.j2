@@ -11,6 +11,10 @@ This report outlines the findings and assets discovered during the security asse
 - **Total Vulnerabilities Identified:** {{ vulnerabilities|length }}
 - **Critical / High Findings:** {{ critical_high_count }}
 
+{% if ai_summary %}
+{{ ai_summary }}
+{% endif %}
+
 ---
 
 ## 2. Discovered Assets
