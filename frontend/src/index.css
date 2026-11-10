@@ -1,182 +1,152 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+/*
+  VulnForge — "operations console" design system.
+  Deep ink surfaces, a single indigo brand accent kept distinct from the
+  first-class severity palette, and JetBrains Mono for all technical data.
+  Tailwind v4 @theme tokens generate the bg-/text-/border- utilities the UI uses.
+*/
 @theme {
-  --color-base: #0B0E14;
-  --color-surface: rgba(22, 27, 34, 0.6);
-  --color-surface-solid: #161b22;
-  --color-primary: #3b82f6;
-  --color-success: #2ea043;
-  --color-warning: #d29922;
-  --color-danger: #f85149;
-  
+  /* Surfaces */
+  --color-base: #0A0D13;
+  --color-surface: #11151E;
+  --color-surface-solid: #11151E;
+  --color-surface-hover: #1A2130;
+  --color-elevated: #151B26;
+
+  /* Lines */
+  --color-border-color: #222A38;
+  --color-border-hover: #303B4E;
+
+  /* Text */
+  --color-text-primary: #E8ECF4;
+  --color-text-secondary: #94A1B8;
+  --color-text-muted: #5C6678;
+
+  /* Brand accent (indigo) — deliberately NOT a severity color */
+  --color-primary: #6E7BFF;
+  --color-primary-hover: #8591FF;
+  --color-accent: #6E7BFF;
+
+  /* Status */
+  --color-success: #34D399;
+  --color-warning: #FBBF24;
+  --color-danger: #FB5B6B;
+
+  /* Severity scale (first-class for a vuln platform) */
+  --color-critical: #F43F5E;
+  --color-high: #FB7A3C;
+  --color-medium: #FBBF24;
+  --color-low: #38BDF8;
+  --color-info: #8792A6;
+
+  /* Type */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --radius: 10px;
 }
 
 :root {
-  /* Colors - Core Dark Theme */
-  --bg-base: #0B0E14; /* Deep, dark background */
-  --bg-surface: rgba(22, 27, 34, 0.6); /* Translucent surface */
-  --bg-surface-hover: rgba(22, 27, 34, 0.8);
-  --bg-surface-solid: #161b22;
-  
-  --border-color: rgba(255, 255, 255, 0.08);
-  --border-color-hover: rgba(255, 255, 255, 0.15);
-  
-  --text-primary: #f0f6fc;
-  --text-secondary: #8b949e;
-  --text-muted: #484f58;
-  
-  /* Brand / Accents */
-  --accent-primary: #3b82f6;
-  --accent-primary-hover: #2563eb;
-  --accent-primary-alpha: rgba(59, 130, 246, 0.15);
-  
-  --accent-success: #2ea043;
-  --accent-success-alpha: rgba(46, 160, 67, 0.15);
-  
-  --accent-warning: #d29922;
-  --accent-warning-alpha: rgba(210, 153, 34, 0.15);
-  
-  --accent-danger: #f85149;
-  --accent-danger-alpha: rgba(248, 81, 73, 0.15);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Outfit', 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-
-  /* Geometry & Layout */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --bg-base: #0A0D13;
+  --bg-surface: #11151E;
+  --bg-surface-solid: #11151E;
+  --bg-surface-hover: #1A2130;
+  --border-color: #222A38;
+  --border-color-hover: #303B4E;
+  --text-primary: #E8ECF4;
+  --text-secondary: #94A1B8;
+  --text-muted: #5C6678;
+  --accent-primary: #6E7BFF;
+  --accent-primary-hover: #8591FF;
+  --accent-success: #34D399;
+  --accent-warning: #FBBF24;
+  --accent-danger: #FB5B6B;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-full: 9999px;
-  
-  /* Spacing */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-12: 48px;
-  
-  /* Z-index */
-  --z-base: 0;
-  --z-nav: 10;
-  --z-dropdown: 20;
-  --z-modal-backdrop: 40;
-  --z-modal: 50;
-
-  /* Glassmorphism */
-  --blur-md: blur(12px);
-  --blur-lg: blur(24px);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --shadow-glow: 0 0 15px rgba(59, 130, 246, 0.3);
 }
 
-/* Base Styles */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  line-height: 1.5;
+  background-color: #0A0D13;
+  color: #E8ECF4;
+  line-height: 1.55;
+  font-size: 14px;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  /* Abstract dark background pattern */
-  background-image: 
-    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
-    radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
+  /* Faint grid + corner glow — a quiet "console" atmosphere, not decoration overload */
+  background-image:
+    radial-gradient(900px circle at 100% 0%, rgba(110, 123, 255, 0.06), transparent 55%),
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
   background-attachment: fixed;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.2;
-  color: var(--text-primary);
-  margin-bottom: var(--space-4);
+  line-height: 1.15;
+  color: #E8ECF4;
+  letter-spacing: -0.01em;
 }
 
-a {
-  color: var(--accent-primary);
-  text-decoration: none;
-  transition: color 0.2s ease;
+a { color: #6E7BFF; text-decoration: none; transition: color 0.15s ease; }
+a:hover { color: #8591FF; }
+
+button, input, select, textarea { font-family: inherit; color: inherit; }
+
+code, kbd, pre, .mono { font-family: var(--font-mono); }
+
+/* Monospace treatment for technical data (IPs, CVEs, ports, hashes) */
+.data {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  letter-spacing: 0;
 }
 
-a:hover {
-  color: var(--accent-primary-hover);
+/* Focus ring — accessible and on-brand */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
-button, input, select, textarea {
-  font-family: inherit;
-  color: inherit;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #222A38; border-radius: 9999px; border: 2px solid #0A0D13; }
+::-webkit-scrollbar-thumb:hover { background: #303B4E; }
 
-/* Scrollbar customization */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-base);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: var(--radius-full);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-color-hover);
-}
-
-/* Glass panel utility */
-.glass-panel {
+/* Reusable surface panel */
+.panel {
   background: var(--bg-surface);
-  backdrop-filter: var(--blur-md);
-  -webkit-backdrop-filter: var(--blur-md);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-lg);
 }
 
-/* Layout utilities */
-.flex-row { display: flex; flex-direction: row; }
-.flex-col { display: flex; flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.gap-2 { gap: var(--space-2); }
-.gap-3 { gap: var(--space-3); }
-.gap-4 { gap: var(--space-4); }
-.gap-6 { gap: var(--space-6); }
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  html { scroll-behavior: auto; }
+}
 
-/* Typography utilities */
-.text-xs { font-size: 0.75rem; }
-.text-sm { font-size: 0.875rem; }
-.text-base { font-size: 1rem; }
-.text-lg { font-size: 1.125rem; }
-.text-xl { font-size: 1.25rem; }
-.text-2xl { font-size: 1.5rem; }
-.text-3xl { font-size: 1.875rem; }
-
-.font-medium { font-weight: 500; }
-.font-semibold { font-weight: 600; }
-.font-bold { font-weight: 700; }
-
-.text-muted { color: var(--text-muted); }
-.text-secondary { color: var(--text-secondary); }
+/* Subtle enter animation used by pages/cards */
+@keyframes vf-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.vf-rise { animation: vf-rise 0.35s ease both; }

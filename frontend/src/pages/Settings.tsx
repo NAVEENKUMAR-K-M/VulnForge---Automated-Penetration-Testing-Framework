@@ -1,213 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardTitle, CardBody } from '../components/common/Card';
+import React, { useState } from 'react';
+import { User, KeyRound, LogOut } from 'lucide-react';
 import { Button } from '../components/common/Button';
+import { Badge } from '../components/common/Badge';
+import { PageHeader, Field, Input, ErrorBanner } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/auth';
-import type { UserResponse } from '../api/auth';
-import { KeyRound, MonitorX, User } from 'lucide-react';
 
 export const Settings: React.FC = () => {
-  const [user, setUser] = useState<UserResponse | null>(null);
-  
-  // Password change state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [passwordMsg, setPasswordMsg] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
+  const { user, logout } = useAuth();
+  const [cur, setCur] = useState('');
+  const [next, setNext] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
 
-  // Logout all devices state
-  const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
-  const [logoutAllMsg, setLogoutAllMsg] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
-
-  useEffect(() => {
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
+  const changePassword = async () => {
+    if (!cur || !next) return;
+    setBusy(true); setError(null); setOk(null);
     try {
-      const data = await authApi.getCurrentUser();
-      setUser(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleChangePassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPasswordMsg(null);
-    
-    if (newPassword !== confirmPassword) {
-      setPasswordMsg({ text: 'New passwords do not match', type: 'error' });
-      return;
-    }
-
-    setIsChangingPassword(true);
-    try {
-      await authApi.changePassword({ 
-        current_password: currentPassword, 
-        new_password: newPassword 
-      });
-      setPasswordMsg({ text: 'Password changed successfully', type: 'success' });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err: any) {
-      setPasswordMsg({ text: err.message || 'Failed to change password', type: 'error' });
+      await authApi.changePassword({ current_password: cur, new_password: next });
+      setOk('Password changed.');
+      setCur(''); setNext('');
+    } catch (e: any) {
+      setError(e.message);
     } finally {
-      setIsChangingPassword(false);
+      setBusy(false);
     }
   };
-
-  const handleLogoutAll = async () => {
-    if (!window.confirm("Are you sure you want to sign out from all other devices?")) return;
-    
-    setIsLoggingOutAll(true);
-    setLogoutAllMsg(null);
-    try {
-      const res = await authApi.logoutAll();
-      setLogoutAllMsg({ text: res.message || 'Successfully logged out all devices', type: 'success' });
-    } catch (err: any) {
-      setLogoutAllMsg({ text: err.message || 'Failed to logout from all devices', type: 'error' });
-    } finally {
-      setIsLoggingOutAll(false);
-    }
-  };
-
-  if (!user) {
-    return <div className="p-6">Loading profile...</div>;
-  }
 
   return (
-    <div className="flex-col gap-6" style={{ height: '100%', maxWidth: '800px', margin: '0 auto' }}>
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-        <p className="text-secondary">Manage your profile, security, and preferences.</p>
+    <div className="max-w-2xl">
+      <PageHeader eyebrow="Account" title="Settings" subtitle="Manage your profile and credentials." />
+      <ErrorBanner message={error} />
+      {ok && <div className="bg-success/10 border border-success/40 text-success rounded-lg px-4 py-3 text-sm mb-4">{ok}</div>}
+
+      <div className="panel p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4"><User className="w-4 h-4 text-primary" /><h2 className="font-display font-semibold text-text-primary">Profile</h2></div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div><p className="text-xs uppercase tracking-wider text-text-muted">Name</p><p className="text-text-primary">{user?.full_name || '—'}</p></div>
+          <div><p className="text-xs uppercase tracking-wider text-text-muted">Email</p><p className="data text-text-primary">{user?.email}</p></div>
+          <div><p className="text-xs uppercase tracking-wider text-text-muted">Role</p><Badge variant={user?.is_superuser ? 'primary' : 'secondary'}>{user?.is_superuser ? 'Admin' : 'Analyst'}</Badge></div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex-row items-center gap-2">
-            <User size={18} className="text-primary" />
-            <CardTitle>Profile Information</CardTitle>
-          </div>
-        </CardHeader>
-        <CardBody className="flex-col gap-4">
-          <div className="flex-col gap-1">
-            <span className="text-sm font-medium text-secondary">Full Name</span>
-            <span>{user.full_name || 'Not provided'}</span>
-          </div>
-          <div className="flex-col gap-1">
-            <span className="text-sm font-medium text-secondary">Email Address</span>
-            <span>{user.email}</span>
-          </div>
-          <div className="flex-col gap-1">
-            <span className="text-sm font-medium text-secondary">Role</span>
-            <span>{user.is_superuser ? 'Super Administrator' : 'Standard User'}</span>
-          </div>
-          <div className="flex-col gap-1">
-            <span className="text-sm font-medium text-secondary">Member Since</span>
-            <span>{new Date(user.created_at).toLocaleDateString()}</span>
-          </div>
-        </CardBody>
-      </Card>
+      <div className="panel p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4"><KeyRound className="w-4 h-4 text-primary" /><h2 className="font-display font-semibold text-text-primary">Change password</h2></div>
+        <div className="space-y-4 max-w-sm">
+          <Field label="Current password"><Input type="password" value={cur} onChange={(e) => setCur(e.target.value)} /></Field>
+          <Field label="New password" hint="At least 12 characters."><Input type="password" value={next} onChange={(e) => setNext(e.target.value)} /></Field>
+          <Button variant="primary" onClick={changePassword} isLoading={busy} disabled={!cur || !next}>Update password</Button>
+        </div>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex-row items-center gap-2">
-            <KeyRound size={18} className="text-primary" />
-            <CardTitle>Change Password</CardTitle>
-          </div>
-        </CardHeader>
-        <CardBody>
-          <form onSubmit={handleChangePassword} className="flex-col gap-4">
-            {passwordMsg && (
-              <div style={{ 
-                background: passwordMsg.type === 'error' ? 'var(--accent-danger-alpha)' : 'rgba(46, 160, 67, 0.1)', 
-                color: passwordMsg.type === 'error' ? '#ff7b72' : '#3fb950', 
-                padding: '8px 12px', borderRadius: '4px', fontSize: '14px', 
-                border: `1px solid ${passwordMsg.type === 'error' ? 'rgba(248,81,73,0.3)' : 'rgba(46,160,67,0.3)'}` 
-              }}>
-                {passwordMsg.text}
-              </div>
-            )}
-            
-            <div className="flex-col gap-2">
-              <label className="text-sm font-medium">Current Password</label>
-              <input 
-                type="password" 
-                className="glass-input" 
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required 
-              />
-            </div>
-            
-            <div className="flex-col gap-2">
-              <label className="text-sm font-medium">New Password</label>
-              <input 
-                type="password" 
-                className="glass-input" 
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={8}
-              />
-            </div>
-
-            <div className="flex-col gap-2">
-              <label className="text-sm font-medium">Confirm New Password</label>
-              <input 
-                type="password" 
-                className="glass-input" 
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required 
-              />
-            </div>
-            
-            <div className="flex-row justify-end mt-2">
-              <Button type="submit" isLoading={isChangingPassword}>Update Password</Button>
-            </div>
-          </form>
-        </CardBody>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex-row items-center gap-2">
-            <MonitorX size={18} className="text-danger" />
-            <CardTitle style={{ color: 'var(--accent-danger)' }}>Device Management</CardTitle>
-          </div>
-        </CardHeader>
-        <CardBody className="flex-col gap-4">
-          <p className="text-sm text-secondary">
-            If you've noticed suspicious activity on your account, you can sign out of all active sessions across all devices. 
-            You will need to sign back in on this device afterwards.
-          </p>
-          
-          {logoutAllMsg && (
-            <div style={{ 
-              background: logoutAllMsg.type === 'error' ? 'var(--accent-danger-alpha)' : 'rgba(46, 160, 67, 0.1)', 
-              color: logoutAllMsg.type === 'error' ? '#ff7b72' : '#3fb950', 
-              padding: '8px 12px', borderRadius: '4px', fontSize: '14px', 
-              border: `1px solid ${logoutAllMsg.type === 'error' ? 'rgba(248,81,73,0.3)' : 'rgba(46,160,67,0.3)'}` 
-            }}>
-              {logoutAllMsg.text}
-            </div>
-          )}
-          
-          <div className="flex-row justify-end">
-            <Button 
-              variant="secondary" 
-              onClick={handleLogoutAll} 
-              isLoading={isLoggingOutAll}
-              style={{ color: 'var(--accent-danger)', borderColor: 'var(--accent-danger-alpha)' }}
-            >
-              Sign out from all devices
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
+      <Button variant="danger" leftIcon={<LogOut className="w-4 h-4" />} onClick={logout}>Sign out</Button>
     </div>
   );
 };

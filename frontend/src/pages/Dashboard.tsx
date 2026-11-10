@@ -1,97 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardHeader, CardTitle, CardBody } from '../components/common/Card';
-import { Badge } from '../components/common/Badge';
+import { Link } from 'react-router-dom';
+import { FolderKanban, SlidersHorizontal, BookOpen, ArrowRight, ShieldHalf } from 'lucide-react';
+import { PageHeader, StatCard, Loading } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
 import { workspacesApi } from '../api/workspaces';
 import type { Workspace } from '../api/workspaces';
 
+const quickLinks = [
+  { to: '/workspaces', label: 'Workspaces', hint: 'Engagements, targets & scope', icon: FolderKanban },
+  { to: '/scan-profiles', label: 'Scan Profiles', hint: 'Reusable tool configurations', icon: SlidersHorizontal },
+  { to: '/knowledge-base', label: 'Knowledge Base', hint: 'Search disclosed writeups', icon: BookOpen },
+];
+
 export const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [totalTargets, setTotalTargets] = useState(0);
-  const [totalVulns, setTotalVulns] = useState(0);
-  const [activeScans, setActiveScans] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const wsData = await workspacesApi.list();
-        setWorkspaces(wsData);
-
-        // Fetch dashboard stats for all workspaces
-        const statsPromises = wsData.map(ws => workspacesApi.getDashboard(ws.id).catch(() => null));
-        const allStats = await Promise.all(statsPromises);
-        
-        let targetsCount = 0;
-        let vulnsCount = 0;
-        
-        allStats.forEach(stat => {
-          if (stat) {
-            targetsCount += stat.targets_count || 0;
-            vulnsCount += stat.open_vulnerabilities_count || 0;
-          }
-        });
-        
-        setTotalTargets(targetsCount);
-        setTotalVulns(vulnsCount);
-        // Active scans would ideally come from the stats too, but keeping 0 for now as scans aren't implemented
-        setActiveScans(0);
-
-      } catch (err) {
-        console.error("Failed to load dashboard data", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchDashboardData();
+    workspacesApi.list().then(setWorkspaces).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  return (
-    <div className="flex-col gap-6" style={{ height: '100%' }}>
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-secondary">Overview of all active penetration testing engagements.</p>
-      </div>
+  const firstName = (user?.full_name || user?.email || 'Operator').split(/[\s@]/)[0];
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Workspaces</CardTitle>
-          </CardHeader>
-          <CardBody>
-            <div className="text-3xl font-bold text-primary">
-              {isLoading ? '...' : workspaces.length}
-            </div>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Running Scans</CardTitle>
-          </CardHeader>
-          <CardBody>
-            <div className="flex-row items-center gap-3">
-              <span className="text-3xl font-bold text-warning">{isLoading ? '...' : activeScans}</span>
-              <Badge variant="warning">In Progress</Badge>
-            </div>
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Critical Vulnerabilities</CardTitle>
-          </CardHeader>
-          <CardBody>
-            <div className="text-3xl font-bold text-danger">{isLoading ? '...' : totalVulns}</div>
-          </CardBody>
-        </Card>
-      </div>
-      
-      <Card glass={false} style={{ flex: 1, minHeight: '300px' }}>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardBody className="flex-col gap-4">
-          <p className="text-secondary">No recent activity found in the logs.</p>
-        </CardBody>
-      </Card>
+  return (
+    <div>
+      <PageHeader
+        eyebrow="Operations console"
+        title={`Welcome back, ${firstName}`}
+        subtitle="Orchestrate reconnaissance, scanning, and AI-assisted assessment across your engagements."
+      />
+
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-3 mb-8">
+            <StatCard label="Workspaces" value={workspaces.length} icon={<FolderKanban className="w-5 h-5" />} tone="primary" />
+            <StatCard label="Active engagements" value={workspaces.filter((w) => w.is_active !== false).length} icon={<ShieldHalf className="w-5 h-5" />} />
+            <StatCard label="Role" value={user?.is_superuser ? 'Admin' : 'Analyst'} />
+          </div>
+
+          <h2 className="text-sm uppercase tracking-wider text-text-muted mb-3">Jump to</h2>
+          <div className="grid gap-4 sm:grid-cols-3 mb-8">
+            {quickLinks.map((q) => (
+              <Link key={q.to} to={q.to} className="panel p-5 hover:border-primary/50 transition-colors group flex items-start justify-between">
+                <div>
+                  <q.icon className="w-6 h-6 text-primary mb-3" />
+                  <p className="font-medium text-text-primary">{q.label}</p>
+                  <p className="text-sm text-text-secondary">{q.hint}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
+              </Link>
+            ))}
+          </div>
+
+          {workspaces.length > 0 && (
+            <>
+              <h2 className="text-sm uppercase tracking-wider text-text-muted mb-3">Recent workspaces</h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {workspaces.slice(0, 4).map((w) => (
+                  <Link key={w.id} to={`/projects/${w.id}/dashboard`} className="panel p-4 flex items-center justify-between hover:border-primary/50 transition-colors">
+                    <div>
+                      <p className="font-medium text-text-primary">{w.name}</p>
+                      <p className="text-sm text-text-secondary line-clamp-1">{w.description || 'No description'}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-text-muted" />
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 };

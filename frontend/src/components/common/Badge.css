@@ -1,40 +1,41 @@
 .v-badge {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 500;
+  gap: 5px;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .v-badge-primary {
-  background: var(--accent-primary-alpha);
-  color: #7dd3fc;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  background: color-mix(in srgb, var(--accent-primary) 15%, transparent);
+  color: var(--accent-primary);
+  border-color: color-mix(in srgb, var(--accent-primary) 35%, transparent);
 }
-
 .v-badge-secondary {
-  background: rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--text-secondary) 12%, transparent);
   color: var(--text-secondary);
-  border: 1px solid var(--border-color);
+  border-color: color-mix(in srgb, var(--text-secondary) 26%, transparent);
 }
-
 .v-badge-success {
-  background: var(--accent-success-alpha);
-  color: #7ee787;
-  border: 1px solid rgba(126, 231, 135, 0.2);
+  background: color-mix(in srgb, var(--accent-success) 14%, transparent);
+  color: var(--accent-success);
+  border-color: color-mix(in srgb, var(--accent-success) 34%, transparent);
 }
-
 .v-badge-warning {
-  background: var(--accent-warning-alpha);
-  color: #e3b341;
-  border: 1px solid rgba(227, 179, 65, 0.2);
+  background: color-mix(in srgb, var(--accent-warning) 14%, transparent);
+  color: var(--accent-warning);
+  border-color: color-mix(in srgb, var(--accent-warning) 34%, transparent);
 }
-
 .v-badge-danger {
-  background: var(--accent-danger-alpha);
-  color: #ff7b72;
-  border: 1px solid rgba(248, 81, 73, 0.2);
+  background: color-mix(in srgb, var(--accent-danger) 15%, transparent);
+  color: var(--accent-danger);
+  border-color: color-mix(in srgb, var(--accent-danger) 36%, transparent);
 }

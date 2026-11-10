@@ -1,147 +1,118 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Card, CardHeader, CardTitle, CardBody } from '../components/common/Card';
+import { useNavigate } from 'react-router-dom';
+import { FolderKanban, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '../components/common/Button';
-import { Plus, Search } from 'lucide-react';
+import { PageHeader, EmptyState, Loading, ErrorBanner, Modal, Field, Input, Textarea } from '../components/ui';
 import { workspacesApi } from '../api/workspaces';
 import type { Workspace } from '../api/workspaces';
 
 export const Workspaces: React.FC = () => {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  // Modal State
-  const [showModal, setShowModal] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newDesc, setNewDesc] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
+  const navigate = useNavigate();
+  const [items, setItems] = useState<Workspace[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  const fetchWorkspaces = async () => {
-    setIsLoading(true);
-    try {
-      const data = await workspacesApi.list();
-      setWorkspaces(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+  const load = () => {
+    setLoading(true);
+    workspacesApi
+      .list()
+      .then(setItems)
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   };
+  useEffect(load, []);
 
-  useEffect(() => {
-    fetchWorkspaces();
-  }, []);
-
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsCreating(true);
+  const create = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    setError(null);
     try {
-      await workspacesApi.create({ name: newName, description: newDesc });
-      setShowModal(false);
-      setNewName('');
-      setNewDesc('');
-      await fetchWorkspaces();
-    } catch (err) {
-      console.error(err);
-      alert('Failed to create workspace');
+      const ws = await workspacesApi.create({ name, description: description || undefined });
+      setOpen(false);
+      setName('');
+      setDescription('');
+      navigate(`/projects/${ws.id}/dashboard`);
+    } catch (e: any) {
+      setError(e.message);
     } finally {
-      setIsCreating(false);
+      setSaving(false);
     }
   };
 
   return (
-    <div className="flex-col gap-6" style={{ height: '100%', position: 'relative' }}>
-      <div className="flex-row items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Workspaces</h1>
-          <p className="text-secondary">Manage and isolate your penetration testing engagements.</p>
-        </div>
-        <Button leftIcon={<Plus size={18} />} onClick={() => setShowModal(true)}>New Workspace</Button>
-      </div>
+    <div>
+      <PageHeader
+        eyebrow="Engagements"
+        title="Workspaces"
+        subtitle="Each workspace is an isolated engagement — its own targets, scope, scans, and findings."
+        actions={
+          <Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>
+            New workspace
+          </Button>
+        }
+      />
 
-      <Card glass={false} style={{ flex: 1 }}>
-        <CardHeader>
-          <div className="flex-row items-center gap-4 w-full">
-            <div className="flex-row items-center flex-1 gap-2 glass-input" style={{ maxWidth: '300px' }}>
-              <Search size={16} className="text-muted" />
-              <input 
-                type="text" 
-                placeholder="Search workspaces..." 
-                style={{ background: 'transparent', border: 'none', color: 'inherit', outline: 'none', width: '100%' }}
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardBody>
-          {isLoading ? (
-            <p className="text-secondary">Loading workspaces...</p>
-          ) : workspaces.length === 0 ? (
-            <p className="text-secondary">No workspaces found. Create one to get started.</p>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                  <th style={{ padding: 'var(--space-3)', color: 'var(--text-muted)' }}>Name</th>
-                  <th style={{ padding: 'var(--space-3)', color: 'var(--text-muted)' }}>Created</th>
-                  <th style={{ padding: 'var(--space-3)', color: 'var(--text-muted)' }}>Description</th>
-                  <th style={{ padding: 'var(--space-3)', color: 'var(--text-muted)' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {workspaces.map(ws => (
-                  <tr key={ws.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }} className="hover:bg-surface-hover">
-                    <td style={{ padding: 'var(--space-4) var(--space-3)' }}>
-                      <NavLink to={`/projects/${ws.id}/dashboard`} style={{ fontWeight: 600 }}>{ws.name}</NavLink>
-                    </td>
-                    <td style={{ padding: 'var(--space-4) var(--space-3)', color: 'var(--text-secondary)' }}>
-                      {new Date(ws.created_at).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: 'var(--space-4) var(--space-3)', color: 'var(--text-secondary)' }}>
-                      {ws.description || '-'}
-                    </td>
-                    <td style={{ padding: 'var(--space-4) var(--space-3)' }}>
-                      <NavLink to={`/workspaces/${ws.id}`}>
-                        <Button variant="ghost" size="sm">Manage</Button>
-                      </NavLink>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </CardBody>
-      </Card>
+      <ErrorBanner message={error} />
 
-      {/* Simple Modal */}
-      {showModal && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100
-        }}>
-          <Card style={{ width: '400px' }}>
-            <CardHeader>
-              <CardTitle>Create New Workspace</CardTitle>
-            </CardHeader>
-            <CardBody>
-              <form onSubmit={handleCreate} className="flex-col gap-4">
-                <div className="flex-col gap-2">
-                  <label className="text-sm font-medium">Name *</label>
-                  <input className="glass-input" value={newName} onChange={e => setNewName(e.target.value)} required />
+      {loading ? (
+        <Loading label="Loading workspaces…" />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={<FolderKanban className="w-12 h-12" />}
+          title="No workspaces yet"
+          hint="Create your first workspace to start scoping targets and running assessments."
+          action={<Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>New workspace</Button>}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((w) => (
+            <button
+              key={w.id}
+              onClick={() => navigate(`/projects/${w.id}/dashboard`)}
+              className="text-left panel p-5 hover:border-primary/50 transition-colors group"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
+                  <FolderKanban className="w-5 h-5 text-primary" />
                 </div>
-                <div className="flex-col gap-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <textarea className="glass-input" value={newDesc} onChange={e => setNewDesc(e.target.value)} rows={3} />
-                </div>
-                <div className="flex-row justify-between mt-4">
-                  <Button type="button" variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>
-                  <Button type="submit" isLoading={isCreating}>Create Workspace</Button>
-                </div>
-              </form>
-            </CardBody>
-          </Card>
+                <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+              </div>
+              <h3 className="mt-4 font-display font-semibold text-text-primary">{w.name}</h3>
+              <p className="text-sm text-text-secondary mt-1 line-clamp-2">
+                {w.description || 'No description'}
+              </p>
+              <p className="data text-xs text-text-muted mt-3">
+                Created {new Date(w.created_at).toLocaleDateString()}
+              </p>
+            </button>
+          ))}
         </div>
       )}
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="New workspace"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="primary" onClick={create} isLoading={saving} disabled={!name.trim()}>
+              Create workspace
+            </Button>
+          </>
+        }
+      >
+        <Field label="Name">
+          <Input placeholder="Acme Corp — External Assessment" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        </Field>
+        <Field label="Description" hint="Optional — scope, client, or engagement notes.">
+          <Textarea placeholder="What is this engagement about?" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </Field>
+      </Modal>
     </div>
   );
 };

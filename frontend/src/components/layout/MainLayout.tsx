@@ -1,22 +1,13 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
-import './MainLayout.css';
 
 export const MainLayout: React.FC = () => {
   return (
-    <div className="v-layout">
+    <div className="flex h-screen bg-base text-text-primary">
       <Sidebar />
-      <main className="v-main-content">
-        <header className="v-topbar glass-panel">
-          <div className="topbar-search">
-            <input type="text" placeholder="Search workspaces, targets, scans..." className="glass-input" />
-          </div>
-          <div className="topbar-actions">
-            <div className="user-avatar">AD</div>
-          </div>
-        </header>
-        <div className="v-page-container">
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto px-8 py-8 vf-rise">
           <Outlet />
         </div>
       </main>

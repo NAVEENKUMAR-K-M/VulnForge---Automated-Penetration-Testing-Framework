@@ -53,7 +53,7 @@ export const targetsApi = {
     });
   },
 
-  delete: async (workspaceId: string, targetId: string): Promise<void> => {
+  delete: async (_workspaceId: string, targetId: string): Promise<void> => {
     return fetchApi<void>(`/targets/${targetId}`, {
       method: 'DELETE',
     });

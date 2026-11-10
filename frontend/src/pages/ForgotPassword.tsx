@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ShieldAlert, Mail } from 'lucide-react';
 import { Card, CardHeader, CardBody } from '../components/common/Card';
 import { Button } from '../components/common/Button';

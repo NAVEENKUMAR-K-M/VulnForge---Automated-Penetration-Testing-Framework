@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ShieldAlert, LogIn } from 'lucide-react';
-import { Card, CardHeader, CardBody } from '../components/common/Card';
+import { LogIn, ShieldHalf, Terminal } from 'lucide-react';
 import { Button } from '../components/common/Button';
+import { Field, Input, ErrorBanner } from '../components/ui';
 import { authApi } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  
   const [email, setEmail] = useState('admin@vulnforge.com');
-  const [password, setPassword] = useState('CHANGE_ME_ADMIN_PASSWORD');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,78 +18,71 @@ export const Login: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    
     try {
       const { access_token } = await authApi.login(email, password);
       await login(access_token);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to login');
+      setError(err.message || 'Sign in failed. Check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: 'var(--space-4)' }}>
-      <div style={{ width: '100%', maxWidth: '400px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <ShieldAlert size={48} className="text-primary" style={{ margin: '0 auto var(--space-3)' }} />
-          <h1 className="text-3xl font-bold" style={{ 
-            background: 'linear-gradient(90deg, #fff, #8b949e)', 
-            WebkitBackgroundClip: 'text', 
-            WebkitTextFillColor: 'transparent' 
-          }}>
-            VulnForge
-          </h1>
-          <p className="text-secondary mt-2">Automated Penetration Testing</p>
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Brand panel */}
+      <div className="hidden lg:flex flex-col justify-between p-12 border-r border-border-color relative overflow-hidden">
+        <div className="relative z-10 flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
+            <ShieldHalf className="w-5 h-5 text-primary" />
+          </div>
+          <span className="font-display font-semibold text-xl">VulnForge</span>
         </div>
+        <div className="relative z-10 max-w-md">
+          <h1 className="text-4xl font-display font-semibold leading-tight">
+            The security operations console for automated assessment.
+          </h1>
+          <p className="text-text-secondary mt-4 leading-relaxed">
+            Orchestrate reconnaissance, scanning, and an approval-gated AI agent — grounded in a knowledge base of real
+            disclosed writeups.
+          </p>
+          <div className="data text-xs text-text-muted mt-8 flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-primary" /> recon → scan → agent → report
+          </div>
+        </div>
+        <div className="relative z-10 data text-xs text-text-muted">For authorized security testing only.</div>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold" style={{ margin: 0 }}>Sign in</h2>
-          </CardHeader>
-          <CardBody>
-            <form onSubmit={handleLogin} className="flex-col gap-4">
-              {error && (
-                <div style={{ background: 'var(--accent-danger-alpha)', color: '#ff7b72', padding: '8px 12px', borderRadius: '4px', fontSize: '14px', border: '1px solid rgba(248,81,73,0.3)' }}>
-                  {error}
-                </div>
-              )}
-              <div className="flex-col gap-2">
-                <label className="text-sm font-medium text-secondary">Email address</label>
-                <input 
-                  type="email" 
-                  className="glass-input" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required 
-                />
+      {/* Form */}
+      <div className="flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+          <div className="lg:hidden flex items-center gap-2.5 mb-8 justify-center">
+            <ShieldHalf className="w-6 h-6 text-primary" />
+            <span className="font-display font-semibold text-xl">VulnForge</span>
+          </div>
+          <h2 className="text-2xl font-display font-semibold mb-1">Sign in</h2>
+          <p className="text-text-secondary mb-6">Welcome back. Enter your credentials to continue.</p>
+
+          <ErrorBanner message={error} />
+          <form onSubmit={handleLogin} className="space-y-4">
+            <Field label="Email">
+              <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+            </Field>
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-text-secondary">Password</span>
+                <Link to="/forgot-password" className="text-xs text-primary">Forgot password?</Link>
               </div>
-              <div className="flex-col gap-2">
-                <div className="flex-row justify-between items-center">
-                  <label className="text-sm font-medium text-secondary">Password</label>
-                  <Link to="/forgot-password" style={{ fontSize: '12px', color: 'var(--accent-primary)', textDecoration: 'none' }}>Forgot password?</Link>
-                </div>
-                <input 
-                  type="password" 
-                  className="glass-input" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required 
-                />
-              </div>
-              
-              <Button type="submit" size="lg" isLoading={isLoading} leftIcon={<LogIn size={18} />} style={{ marginTop: 'var(--space-2)' }}>
-                Sign in
-              </Button>
-            </form>
-          </CardBody>
-        </Card>
-        
-        <div style={{ textAlign: 'center', marginTop: 'var(--space-4)' }}>
-          <p className="text-secondary text-sm">
-            Don't have an account? <Link to="/register" style={{ color: 'var(--accent-primary)', textDecoration: 'none' }}>Sign up here</Link>
+              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+            <Button type="submit" size="lg" isLoading={isLoading} leftIcon={<LogIn className="w-4 h-4" />} className="w-full">
+              Sign in
+            </Button>
+          </form>
+
+          <p className="text-text-secondary text-sm mt-6 text-center">
+            Don't have an account? <Link to="/register" className="text-primary">Create one</Link>
           </p>
         </div>
       </div>
