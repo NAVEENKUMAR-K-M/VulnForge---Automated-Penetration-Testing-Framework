@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink, useParams } from 'react-router-dom';
-import { LayoutDashboard, Target, Crosshair, Server, FileText, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, Target, Crosshair, Server, FileText, BarChart3, Settings, Bot } from 'lucide-react';
 
 export const ProjectLayout: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -9,6 +9,7 @@ export const ProjectLayout: React.FC = () => {
     { name: 'Dashboard', to: `/projects/${id}/dashboard`, icon: LayoutDashboard },
     { name: 'Targets', to: `/projects/${id}/targets`, icon: Target },
     { name: 'Scans', to: `/projects/${id}/scans`, icon: Crosshair },
+    { name: 'Agent', to: `/projects/${id}/agent`, icon: Bot },
     { name: 'Assets', to: `/projects/${id}/assets`, icon: Server },
     { name: 'Reports', to: `/projects/${id}/reports`, icon: FileText },
     { name: 'Charts', to: `/projects/${id}/charts`, icon: BarChart3 },

@@ -10,6 +10,7 @@ import { ProjectScans } from './pages/projects/Scans';
 import { ProjectAssets } from './pages/projects/Assets';
 import { ProjectReports } from './pages/projects/Reports';
 import { ProjectCharts } from './pages/projects/Charts';
+import { ProjectAgent } from './pages/projects/Agent';
 import { ScanProfiles } from './pages/ScanProfiles';
 import { Settings } from './pages/Settings';
 import { Login } from './pages/Login';
@@ -60,6 +61,7 @@ function App() {
             <Route path="/projects/:id/dashboard" element={<ProjectDashboard />} />
             <Route path="/projects/:id/targets" element={<ProjectTargets />} />
             <Route path="/projects/:id/scans" element={<ProjectScans />} />
+            <Route path="/projects/:id/agent" element={<ProjectAgent />} />
             <Route path="/projects/:id/assets" element={<ProjectAssets />} />
             <Route path="/projects/:id/reports" element={<ProjectReports />} />
             <Route path="/projects/:id/charts" element={<ProjectCharts />} />

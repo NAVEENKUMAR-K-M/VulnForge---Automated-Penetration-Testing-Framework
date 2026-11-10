@@ -49,6 +49,7 @@ from app.schemas.agent import (
 from app.schemas.common import PaginatedResponse
 from app.services.agent.planner import plan_actions
 from app.services.agent.tools import build_tool_registry
+from app.services.llm.provider import get_llm_provider
 from app.services.workspace_service import WorkspaceService
 
 logger = get_logger(__name__)
@@ -117,7 +118,7 @@ class AgentOrchestrator:
         await self._db.flush()
 
         tools = build_tool_registry()
-        planned = plan_actions(target.value, tools)
+        planned = await plan_actions(target.value, tools, llm=get_llm_provider(self._settings))
         has_approved = has_proposed = False
         for i, pa in enumerate(planned):
             auto = pa.tier == ActionTier.PASSIVE

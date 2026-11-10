@@ -29,27 +29,55 @@ def _tools() -> dict[str, AgentTool]:
     }
 
 
-class TestPlanner:
-    def test_passive_before_active(self) -> None:
-        plan = plan_actions("example.com", _tools())
+class FakeLLM:
+    def __init__(self, response: str, *, raises: bool = False) -> None:
+        self._response = response
+        self._raises = raises
+
+    @property
+    def name(self) -> str:
+        return "fake"
+
+    async def generate(self, prompt: str, *, system: str | None = None) -> str:
+        if self._raises:
+            raise RuntimeError("boom")
+        return self._response
+
+
+class TestDeterministicPlanner:
+    async def test_passive_before_active(self) -> None:
+        plan = await plan_actions("example.com", _tools())
         tiers = [p.tier for p in plan]
-        # all passive steps precede the first active step
         first_active = next(i for i, t in enumerate(tiers) if t == ActionTier.ACTIVE)
         assert all(t == ActionTier.PASSIVE for t in tiers[:first_active])
 
-    def test_active_tools_are_proposed_tier(self) -> None:
-        plan = plan_actions("example.com", _tools())
+    async def test_active_tools_are_active_tier(self) -> None:
+        plan = await plan_actions("example.com", _tools())
         active = [p for p in plan if p.tier == ActionTier.ACTIVE]
         assert [p.tool_name for p in active] == ["nuclei"]
 
-    def test_rag_step_included_with_query(self) -> None:
-        plan = plan_actions("example.com", _tools())
+    async def test_rag_step_included_with_query(self) -> None:
+        plan = await plan_actions("example.com", _tools())
         rag = [p for p in plan if p.tool_name == RAG_TOOL]
-        assert len(rag) == 1
-        assert rag[0].params["query"] == "example.com"
-        assert rag[0].tier == ActionTier.PASSIVE
+        assert len(rag) == 1 and rag[0].params["query"] == "example.com"
 
-    def test_all_plugins_represented(self) -> None:
-        plan = plan_actions("example.com", _tools())
-        names = {p.tool_name for p in plan}
-        assert {"nmap", "httpx", "nuclei", RAG_TOOL} <= names
+
+class TestLlmPlannerGuardrails:
+    async def test_invalid_tools_dropped_and_tiers_preserved(self) -> None:
+        llm = FakeLLM('["nmap", "evil_tool", "nuclei"]')
+        plan = await plan_actions("example.com", _tools(), llm=llm)
+        names = [p.tool_name for p in plan]
+        assert names == ["nmap", "nuclei"]           # invented tool dropped
+        tiers = {p.tool_name: p.tier for p in plan}
+        assert tiers["nuclei"] == ActionTier.ACTIVE  # LLM cannot downgrade the tier
+
+    async def test_unusable_output_falls_back_to_deterministic(self) -> None:
+        llm = FakeLLM("I cannot help with that.")
+        plan = await plan_actions("example.com", _tools(), llm=llm)
+        # deterministic plan includes every tool
+        assert {"nmap", "httpx", "nuclei", RAG_TOOL} <= {p.tool_name for p in plan}
+
+    async def test_llm_error_falls_back(self) -> None:
+        llm = FakeLLM("", raises=True)
+        plan = await plan_actions("example.com", _tools(), llm=llm)
+        assert {"nmap", "nuclei"} <= {p.tool_name for p in plan}

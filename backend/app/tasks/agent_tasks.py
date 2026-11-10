@@ -175,18 +175,27 @@ async def _execute_action(
         )
         return
 
-    ok = await _run_one_plugin(
+    outcome = await _run_one_plugin(
         factory=factory, scan_pk=scan_pk, workspace_id=workspace_id,
         target_id=target_id, target_value=target_value,
         resolved_plugin={"name": tool_name, "plugin_id": str(plugin_id), "config": {}},
         loaded=loaded, log=log,
     )
+    state_map = {
+        "executed": AgentActionState.EXECUTED,
+        "skipped": AgentActionState.SKIPPED,
+        "failed": AgentActionState.FAILED,
+    }
+    summary_map = {
+        "executed": "Executed; findings recorded under the run's scan.",
+        "skipped": "Tool is not available on this host; skipped.",
+        "failed": "Tool ran but did not complete successfully.",
+    }
     await _finish_action(
         factory, action_id,
-        AgentActionState.EXECUTED if ok else AgentActionState.FAILED,
+        state_map.get(outcome, AgentActionState.FAILED),
         scope_verdict=verdict,
-        summary=("Executed; findings recorded under the run's scan." if ok
-                 else "Tool ran but did not complete successfully."),
+        summary=summary_map.get(outcome),
     )
 
 

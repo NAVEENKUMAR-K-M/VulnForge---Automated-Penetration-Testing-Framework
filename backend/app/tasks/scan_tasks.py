@@ -115,7 +115,7 @@ async def _execute_scan(scan_id: str) -> dict[str, Any]:
         loaded = PluginLoader().discover_plugins()
         ran_any = False
         for rp in resolved:
-            ok = await _run_one_plugin(
+            outcome = await _run_one_plugin(
                 factory=factory,
                 scan_pk=scan_pk,
                 workspace_id=workspace_id,
@@ -125,7 +125,7 @@ async def _execute_scan(scan_id: str) -> dict[str, Any]:
                 loaded=loaded,
                 log=log,
             )
-            ran_any = ran_any or ok
+            ran_any = ran_any or outcome == "executed"
 
         # ── 4. Finalize ───────────────────────────────────────────────────────
         final = ScanStatus.COMPLETED if (ran_any or not resolved) else ScanStatus.FAILED
@@ -155,8 +155,12 @@ async def _run_one_plugin(
     resolved_plugin: dict[str, Any],
     loaded: dict[str, Any],
     log: Any,
-) -> bool:
-    """Execute a single resolved plugin. Returns True on a successful run."""
+) -> str:
+    """Execute a single resolved plugin.
+
+    Returns one of: "executed" (ran successfully), "skipped" (tool/class not
+    available), or "failed" (ran but errored).
+    """
     name = resolved_plugin.get("name", "")
     plugin_id_raw = resolved_plugin.get("plugin_id")
     config = resolved_plugin.get("config", {}) or {}
@@ -183,7 +187,7 @@ async def _run_one_plugin(
             error="Plugin class not found on disk.",
         )
         plog.warning("plugin.missing")
-        return False
+        return "skipped"
 
     try:
         plugin = plugin_cls(config=config, target=target_value)
@@ -194,7 +198,7 @@ async def _run_one_plugin(
                 error="Plugin dependencies are not available on this host.",
             )
             plog.warning("plugin.deps_missing")
-            return False
+            return "skipped"
 
         result = await plugin.execute()
         if not result.success:
@@ -203,7 +207,7 @@ async def _run_one_plugin(
                 raw_output=result.raw_output, error=result.error_message,
             )
             plog.warning("plugin.failed", error=result.error_message)
-            return False
+            return "failed"
 
         parsed = plugin.parse_results(result.raw_output)
 
@@ -233,14 +237,14 @@ async def _run_one_plugin(
             assets=len(parsed.assets),
             vulnerabilities=len(parsed.vulnerabilities),
         )
-        return True
+        return "executed"
 
     except Exception as exc:  # noqa: BLE001 - isolate plugin failures from the scan
         logger.exception("plugin.exception", plugin=name)
         await _finish_execution(
             factory, spe_id, PluginExecutionStatus.FAILED, error=str(exc),
         )
-        return False
+        return "failed"
 
 
 async def _finish_execution(
