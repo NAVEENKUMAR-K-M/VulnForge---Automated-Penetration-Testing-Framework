@@ -19,6 +19,7 @@ from app.api.deps import (
     require_superuser,
 )
 from app.schemas.writeup import IngestResult, RagStats, SearchResponse, WriteupIngestInput
+from app.services.rag.connectors import AVAILABLE_CONNECTORS
 from app.services.rag.ingestion_service import WriteupIngestionService
 from app.services.rag.retrieval_service import RetrievalService
 from app.services.rag.sources import get_seed_writeups
@@ -70,6 +71,15 @@ async def rag_stats(current_user: CurrentUserDep, svc: RetrievalServiceDep) -> R
     return await svc.stats()
 
 
+@router.get(
+    "/sources",
+    status_code=status.HTTP_200_OK,
+    summary="List available writeup source connectors",
+)
+async def list_sources(current_user: CurrentUserDep) -> dict[str, list[str]]:
+    return {"sources": sorted(AVAILABLE_CONNECTORS)}
+
+
 @router.post(
     "/ingest/seed",
     response_model=IngestResult,
@@ -82,6 +92,25 @@ async def ingest_seed(
     svc: IngestionServiceDep,
 ) -> IngestResult:
     return await svc.ingest_batch(get_seed_writeups())
+
+
+@router.post(
+    "/ingest/source",
+    response_model=IngestResult,
+    status_code=status.HTTP_200_OK,
+    summary="Ingest from a named source connector (admin)",
+    description=(
+        "Fetch writeups from a public source connector (e.g. 'github_advisories') "
+        "and embed them. Deduplicated by content hash. See GET /rag/sources."
+    ),
+)
+async def ingest_source(
+    _su: Annotated[object, Depends(require_superuser())],
+    svc: IngestionServiceDep,
+    source: str = Query(..., description="Connector name, e.g. 'github_advisories'."),
+    limit: int = Query(50, ge=1, le=500, description="Max writeups to fetch."),
+) -> IngestResult:
+    return await svc.ingest_from_source(source, limit=limit)
 
 
 @router.post(

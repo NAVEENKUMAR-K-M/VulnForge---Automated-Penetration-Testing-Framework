@@ -18,6 +18,7 @@ from app.core.logging import get_logger
 from app.repositories.writeup import WriteupRepository
 from app.schemas.writeup import IngestResult, WriteupIngestInput
 from app.services.rag.chunking import chunk_text, content_hash, normalise_content
+from app.services.rag.connectors import get_connector
 from app.services.rag.embeddings import get_embedding_provider
 
 logger = get_logger(__name__)
@@ -78,6 +79,13 @@ class WriteupIngestionService:
         }
         await self._repo.create_writeup(data, chunk_rows)
         return (True, len(chunks))
+
+    async def ingest_from_source(self, source: str, limit: int = 50) -> IngestResult:
+        """Fetch writeups from a named connector and ingest them."""
+        connector = get_connector(source, self._settings)
+        items = await connector.fetch(limit=limit)
+        logger.info("ingest.source_fetched", source=source, fetched=len(items))
+        return await self.ingest_batch(items)
 
     async def ingest_batch(self, items: list[WriteupIngestInput]) -> IngestResult:
         """Ingest a batch, committing once at the end."""

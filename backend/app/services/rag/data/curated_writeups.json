@@ -1,0 +1,22 @@
+[
+  {
+    "title": "Hunting IDOR in multi-tenant APIs: a checklist",
+    "vuln_class": "idor",
+    "cwe_id": "CWE-639",
+    "severity": "high",
+    "source_url": "",
+    "tech_stack": ["rest", "api", "graphql"],
+    "tags": ["methodology", "access-control"],
+    "content": "Methodology for finding IDOR / broken object-level authorization in multi-tenant apps. 1) Enumerate every endpoint that takes an object identifier (numeric id, UUID, slug, filename). 2) Create two accounts in different tenants. 3) Capture a request from account A, replay it with account B's session but A's object id. 4) Check reads AND writes/deletes — authorization is often enforced on GET but not on PATCH/DELETE. 5) Try nested/secondary ids (e.g., ?invoice_id= inside a bulk endpoint), array parameters, and id in the body vs URL. 6) Swap UUIDs for sequential ids if the app leaks them elsewhere. Root cause is missing per-request, per-object authorization scoped to the caller. Report impact by demonstrating cross-tenant data access or modification."
+  },
+  {
+    "title": "Finding SSRF and escalating to cloud metadata",
+    "vuln_class": "ssrf",
+    "cwe_id": "CWE-918",
+    "severity": "critical",
+    "source_url": "",
+    "tech_stack": ["aws", "gcp", "azure"],
+    "tags": ["methodology", "cloud"],
+    "content": "Methodology for SSRF discovery and escalation. 1) Find any feature that fetches a URL server-side: webhooks, URL preview, PDF/image render, import-from-URL, SSO metadata, XML/SVG parsing. 2) Point it at a collaborator host to confirm the server makes the request. 3) Try internal targets: 127.0.0.1, 169.254.169.254 (cloud metadata), internal hostnames, and other ports. 4) Bypass filters with alternate IP encodings (decimal/octal/hex), DNS rebinding, redirects (302 to internal), and IPv6. 5) On cloud, pull instance metadata / IAM credentials (prefer IMDSv2-aware payloads). Impact ranges from internal service access to full account takeover via leaked credentials. Remediation: allow-list destinations, block link-local/private ranges after resolution, disable unneeded redirects."
+  }
+]

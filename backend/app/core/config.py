@@ -276,6 +276,28 @@ class Settings(BaseSettings):
         default=False,
         description="Enable the scheduled writeup ingestion beat task.",
     )
+    rag_ingest_sources: str = Field(
+        default="github_advisories",
+        description="Comma-separated connector names the scheduled task ingests from.",
+    )
+    rag_ingest_limit: int = Field(
+        default=100,
+        ge=1,
+        description="Max writeups fetched per source per scheduled run.",
+    )
+    github_token: str | None = Field(
+        default=None,
+        description="Optional GitHub token — raises the Advisory/WSTG API rate limit to 5000/hr.",
+    )
+    nvd_api_key: str | None = Field(
+        default=None,
+        description="Optional NVD API key — raises the CVE API rate limit.",
+    )
+    rag_curated_path: str | None = Field(
+        default=None,
+        description="Path to a curated writeups JSON file for the 'curated' connector. "
+        "Unset uses the bundled starter file.",
+    )
     hackerone_api_token: str | None = Field(
         default=None,
         description="Optional HackerOne API token for authenticated Hacktivity access.",
