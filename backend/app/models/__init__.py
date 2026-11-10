@@ -41,6 +41,7 @@ from app.models.workspace import (
 from app.models.scope import ScopeRule, ScopeRuleType, ScopeDisposition
 from app.models.scan_profile import ScanProfile, ScanProfilePlugin, ProfileType
 from app.models.asset import DiscoveredAsset, AssetType
+from app.models.writeup import Writeup, WriteupChunk, WriteupSource
 
 __all__ = [
     # Base
@@ -95,4 +96,8 @@ __all__ = [
     # Assets
     "DiscoveredAsset",
     "AssetType",
+    # RAG corpus
+    "Writeup",
+    "WriteupChunk",
+    "WriteupSource",
 ]

@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     environment:
       POSTGRES_USER: vulnforge_user
       POSTGRES_PASSWORD: CHANGE_ME_STRONG_PASSWORD
@@ -41,6 +41,9 @@ services:
       - SECRET_KEY=CHANGE_ME_GENERATE_WITH_SCRIPTS_LONG_ENOUGH_FOR_TESTING
       - FIRST_SUPERUSER_PASSWORD=CHANGE_ME_ADMIN_PASSWORD_12345
       - PYTHONPATH=/app
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
+      - VOYAGE_API_KEY_FALLBACK=${VOYAGE_API_KEY_FALLBACK:-}
+      - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db
@@ -67,6 +70,9 @@ services:
       - SECRET_KEY=CHANGE_ME_GENERATE_WITH_SCRIPTS_LONG_ENOUGH_FOR_TESTING
       - FIRST_SUPERUSER_PASSWORD=CHANGE_ME_ADMIN_PASSWORD_12345
       - PYTHONPATH=/app
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
+      - VOYAGE_API_KEY_FALLBACK=${VOYAGE_API_KEY_FALLBACK:-}
+      - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db
@@ -92,6 +98,9 @@ services:
       - SECRET_KEY=CHANGE_ME_GENERATE_WITH_SCRIPTS_LONG_ENOUGH_FOR_TESTING
       - FIRST_SUPERUSER_PASSWORD=CHANGE_ME_ADMIN_PASSWORD_12345
       - PYTHONPATH=/app
+      - VOYAGE_API_KEY=${VOYAGE_API_KEY:-}
+      - VOYAGE_API_KEY_FALLBACK=${VOYAGE_API_KEY_FALLBACK:-}
+      - RAG_INGEST_ENABLED=${RAG_INGEST_ENABLED:-false}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
     depends_on:
       - db

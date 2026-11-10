@@ -232,6 +232,55 @@ class Settings(BaseSettings):
         description="Username of the initial superuser account.",
     )
 
+    # ── RAG / Knowledge Base ──────────────────────────────────────────────────
+    voyage_api_key: str | None = Field(
+        default=None,
+        description="Voyage AI API key for embedding writeups. If unset, a local "
+        "deterministic fake embedder is used (dev/offline only).",
+    )
+    voyage_api_key_fallback: str | None = Field(
+        default=None,
+        description="Optional second Voyage key. Used only after the primary key's "
+        "free-token quota is exhausted (not for transient rate limits).",
+    )
+    rag_embedding_provider: str = Field(
+        default="voyage",
+        description="Embedding backend: 'voyage' (falls back to fake if no key) or 'fake'.",
+    )
+    rag_embedding_model: str = Field(
+        default="voyage-3.5-lite",
+        description="Voyage embedding model. Commit to one model to avoid re-embeds.",
+    )
+    rag_embedding_dim: int = Field(
+        default=1024,
+        ge=64,
+        description="Embedding dimensionality. MUST match the Writeup vector column.",
+    )
+    rag_chunk_size: int = Field(
+        default=1200,
+        ge=200,
+        description="Max characters per writeup chunk before embedding.",
+    )
+    rag_chunk_overlap: int = Field(
+        default=200,
+        ge=0,
+        description="Character overlap between consecutive chunks.",
+    )
+    rag_default_top_k: int = Field(
+        default=5,
+        ge=1,
+        le=50,
+        description="Default number of writeup chunks returned by a retrieval query.",
+    )
+    rag_ingest_enabled: bool = Field(
+        default=False,
+        description="Enable the scheduled writeup ingestion beat task.",
+    )
+    hackerone_api_token: str | None = Field(
+        default=None,
+        description="Optional HackerOne API token for authenticated Hacktivity access.",
+    )
+
     # ── Validators ────────────────────────────────────────────────────────────
     @field_validator("allowed_origins", mode="before")
     @classmethod

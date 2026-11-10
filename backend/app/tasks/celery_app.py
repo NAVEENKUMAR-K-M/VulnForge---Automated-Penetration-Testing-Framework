@@ -15,6 +15,7 @@ asyncpg connections bound to the loop that uses them.
 from __future__ import annotations
 
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import get_settings
 
@@ -24,7 +25,7 @@ celery_app = Celery(
     "vulnforge",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
-    include=["app.tasks.scan_tasks"],
+    include=["app.tasks.scan_tasks", "app.tasks.ingestion_tasks"],
 )
 
 celery_app.conf.update(
@@ -40,3 +41,12 @@ celery_app.conf.update(
     worker_max_tasks_per_child=50,
     result_expires=86400,
 )
+
+# Beat schedule. The ingestion task self-gates on ``rag_ingest_enabled`` so this
+# entry is inert until an operator turns ingestion on.
+celery_app.conf.beat_schedule = {
+    "ingest-writeups-daily": {
+        "task": "vulnforge.ingest_writeups",
+        "schedule": crontab(hour=3, minute=0),  # 03:00 UTC daily
+    },
+}
