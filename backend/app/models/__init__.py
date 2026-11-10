@@ -42,6 +42,13 @@ from app.models.scope import ScopeRule, ScopeRuleType, ScopeDisposition
 from app.models.scan_profile import ScanProfile, ScanProfilePlugin, ProfileType
 from app.models.asset import DiscoveredAsset, AssetType
 from app.models.writeup import Writeup, WriteupChunk, WriteupSource
+from app.models.agent_run import (
+    AgentRun,
+    AgentAction,
+    AgentRunStatus,
+    AgentActionState,
+    ActionTier,
+)
 
 __all__ = [
     # Base
@@ -100,4 +107,10 @@ __all__ = [
     "Writeup",
     "WriteupChunk",
     "WriteupSource",
+    # Orchestrator agent
+    "AgentRun",
+    "AgentAction",
+    "AgentRunStatus",
+    "AgentActionState",
+    "ActionTier",
 ]
