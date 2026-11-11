@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Crosshair, Server, Bug, Radar, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Crosshair, Server, Bug, Radar, ArrowRight, Activity, ShieldAlert } from 'lucide-react';
 import { PageHeader, StatCard, Loading, DataTable, StatusBadge } from '../../components/ui';
 import type { Column } from '../../components/ui';
-import { Donut, Stagger, StaggerItem } from '../../components/motion';
-import type { DonutSeg } from '../../components/motion';
+import { Stagger, StaggerItem } from '../../components/motion';
+import { ActivityArea, SeverityBars } from '../../components/charts';
 import { scansApi } from '../../api/scans';
 import type { Scan } from '../../api/scans';
 import { assetsApi } from '../../api/assets';
@@ -45,9 +45,21 @@ export const ProjectDashboard: React.FC = () => {
     return c;
   }, [vulns]);
 
-  const segments: DonutSeg[] = (['critical', 'high', 'medium', 'low', 'info'] as const)
-    .filter((k) => sev[k] > 0)
-    .map((k) => ({ value: sev[k], color: SEV_COLOR[k], label: k }));
+  const sevData = (['critical', 'high', 'medium', 'low', 'info'] as const).map((k) => ({
+    name: k[0].toUpperCase() + k.slice(1), value: sev[k], color: SEV_COLOR[k],
+  }));
+
+  const activity = useMemo(() => {
+    const days: { key: string; label: string; value: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push({ key: d.toISOString().slice(0, 10), label: d.toLocaleDateString(undefined, { weekday: 'short' }), value: 0 });
+    }
+    const map = Object.fromEntries(days.map((d) => [d.key, d]));
+    scans.forEach((s) => { const k = (s.created_at || '').slice(0, 10); if (map[k]) map[k].value++; });
+    return days;
+  }, [scans]);
 
   const critHigh = sev.critical + sev.high;
 
@@ -62,38 +74,35 @@ export const ProjectDashboard: React.FC = () => {
 
   return (
     <div>
-      <PageHeader eyebrow="Overview" title="Workspace overview" subtitle="Snapshot of this engagement's attack surface and findings." />
+      <PageHeader eyebrow="Overview" title="Workspace overview" subtitle="Live snapshot of this engagement's attack surface and findings." />
 
-      <div className="grid gap-5 lg:grid-cols-3 mb-5">
-        {/* Severity donut */}
-        <div className="panel p-6 flex flex-col items-center justify-center">
-          <p className="text-xs uppercase tracking-wider text-text-muted self-start mb-2">Findings by severity</p>
+      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-5">
+        <StaggerItem><StatCard label="Targets" value={counts.targets} icon={<Crosshair className="w-5 h-5" />} /></StaggerItem>
+        <StaggerItem><StatCard label="Assets discovered" value={counts.assets} icon={<Server className="w-5 h-5" />} /></StaggerItem>
+        <StaggerItem><StatCard label="Vulnerabilities" value={vulns.length} icon={<Bug className="w-5 h-5" />} tone="primary" /></StaggerItem>
+        <StaggerItem><StatCard label="Critical / High" value={critHigh} tone={critHigh ? 'danger' : 'default'} /></StaggerItem>
+      </Stagger>
+
+      <div className="grid gap-5 lg:grid-cols-5 mb-5">
+        <div className="panel p-5 lg:col-span-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Activity className="w-4 h-4 text-primary" />
+            <h2 className="font-display font-semibold text-text-primary">Scan activity</h2>
+            <span className="text-xs text-text-muted ml-auto">last 7 days</span>
+          </div>
+          <ActivityArea data={activity} />
+        </div>
+        <div className="panel p-5 lg:col-span-2">
+          <h2 className="font-display font-semibold text-text-primary mb-1">Findings by severity</h2>
           {vulns.length ? (
-            <>
-              <Donut segments={segments} centerLabel="findings" />
-              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4">
-                {(['critical', 'high', 'medium', 'low', 'info'] as const).filter((k) => sev[k] > 0).map((k) => (
-                  <span key={k} className="flex items-center gap-1.5 text-xs text-text-secondary capitalize">
-                    <span className="w-2 h-2 rounded-full" style={{ background: SEV_COLOR[k] }} /> {k} · {sev[k]}
-                  </span>
-                ))}
-              </div>
-            </>
+            <SeverityBars data={sevData.filter((d) => d.value > 0)} />
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-text-muted">
+            <div className="flex flex-col items-center justify-center py-12 text-text-muted">
               <ShieldAlert className="w-10 h-10 mb-2 opacity-30" />
               <p className="text-sm">No findings yet</p>
             </div>
           )}
         </div>
-
-        {/* Stat grid */}
-        <Stagger className="lg:col-span-2 grid gap-4 sm:grid-cols-2">
-          <StaggerItem><StatCard label="Targets" value={counts.targets} icon={<Crosshair className="w-5 h-5" />} /></StaggerItem>
-          <StaggerItem><StatCard label="Assets discovered" value={counts.assets} icon={<Server className="w-5 h-5" />} /></StaggerItem>
-          <StaggerItem><StatCard label="Vulnerabilities" value={vulns.length} icon={<Bug className="w-5 h-5" />} tone="primary" /></StaggerItem>
-          <StaggerItem><StatCard label="Critical / High" value={critHigh} tone={critHigh ? 'danger' : 'default'} /></StaggerItem>
-        </Stagger>
       </div>
 
       <div className="flex items-center justify-between mb-3">
