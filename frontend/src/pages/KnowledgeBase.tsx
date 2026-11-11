@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { ragApi } from '../api/rag';
 import type { RagStats, RetrievalResult } from '../api/rag';
 
-const PALETTE = ['#6E7BFF', '#34D399', '#FBBF24', '#38BDF8', '#F43F5E', '#8B5CF6', '#FB7A3C'];
+const PALETTE = ['#0F766E', '#0284C7', '#CA8A04', '#15935E', '#E11D48', '#64748B', '#EA580C'];
 
 export const KnowledgeBase: React.FC = () => {
   const { user } = useAuth();
@@ -80,7 +80,7 @@ export const KnowledgeBase: React.FC = () => {
         <div className="grid gap-5 md:grid-cols-2 mb-6">
           <div className="panel p-5">
             <h2 className="font-display font-semibold text-text-primary mb-2">Corpus by source</h2>
-            <SeverityBars data={Object.entries(stats.by_source).map(([name, value]) => ({ name, value, color: '#6E7BFF' }))} />
+            <SeverityBars data={Object.entries(stats.by_source).map(([name, value]) => ({ name, value, color: '#0F766E' }))} />
           </div>
           <div className="panel p-5">
             <h2 className="font-display font-semibold text-text-primary mb-2">By vulnerability class</h2>

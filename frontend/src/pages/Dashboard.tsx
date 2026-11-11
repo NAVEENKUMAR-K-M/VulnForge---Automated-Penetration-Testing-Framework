@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  FolderKanban, Crosshair, Radar, Bug, Activity, ArrowRight, ShieldAlert, BookOpen, SlidersHorizontal, Command,
+  FolderKanban, Crosshair, Radar, Bug, Activity, ArrowRight, ShieldAlert, Command,
 } from 'lucide-react';
 import { StatCard, Loading, Spinner, DataTable, StatusBadge } from '../components/ui';
 import type { Column } from '../components/ui';
@@ -17,7 +17,7 @@ import { targetsApi } from '../api/targets';
 import { reportsApi } from '../api/reports';
 
 const SEV_COLOR: Record<string, string> = {
-  critical: '#F43F5E', high: '#FB7A3C', medium: '#FBBF24', low: '#38BDF8', info: '#8792A6',
+  critical: '#E11D48', high: '#EA580C', medium: '#CA8A04', low: '#0284C7', info: '#64748B',
 };
 type ScanRow = Scan & { wsName: string };
 
@@ -28,6 +28,7 @@ export const Dashboard: React.FC = () => {
   const [scans, setScans] = useState<ScanRow[]>([]);
   const [totals, setTotals] = useState({ targets: 0 });
   const [sev, setSev] = useState<Record<string, number>>({ critical: 0, high: 0, medium: 0, low: 0, info: 0 });
+  const [wsFindings, setWsFindings] = useState<Record<string, number>>({});
   const [sevLoading, setSevLoading] = useState(true);
 
   useEffect(() => {
@@ -56,12 +57,18 @@ export const Dashboard: React.FC = () => {
 
       // Findings aggregation (slower — report generation) streams in.
       setSevLoading(true);
-      const reps = await Promise.allSettled(ws.slice(0, 6).map((w) => reportsApi.getJson(w.id)));
+      const capped = ws.slice(0, 6);
+      const reps = await Promise.allSettled(capped.map((w) => reportsApi.getJson(w.id)));
       const c: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
-      reps.forEach((r) => {
-        if (r.status === 'fulfilled') r.value.vulnerabilities.forEach((v) => { c[v.severity] = (c[v.severity] || 0) + 1; });
+      const perWs: Record<string, number> = {};
+      reps.forEach((r, i) => {
+        if (r.status === 'fulfilled') {
+          perWs[capped[i].id] = r.value.vulnerabilities.length;
+          r.value.vulnerabilities.forEach((v) => { c[v.severity] = (c[v.severity] || 0) + 1; });
+        }
       });
       setSev(c);
+      setWsFindings(perWs);
       setSevLoading(false);
     })();
   }, []);
@@ -153,23 +160,30 @@ export const Dashboard: React.FC = () => {
           )}
         </div>
         <div>
-          <h2 className="text-sm uppercase tracking-wider text-text-muted mb-3">Jump to</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm uppercase tracking-wider text-text-muted">Engagements</h2>
+            <Link to="/workspaces" className="text-sm text-primary inline-flex items-center gap-1">All <ArrowRight className="w-3.5 h-3.5" /></Link>
+          </div>
           <div className="space-y-3">
-            {[
-              { to: '/workspaces', label: 'Workspaces', icon: FolderKanban },
-              { to: '/scan-profiles', label: 'Scan Profiles', icon: SlidersHorizontal },
-              { to: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
-            ].map((q) => (
-              <motion.div key={q.to} whileHover={{ x: 3 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
-                <Link to={q.to} className="panel panel-interactive p-4 flex items-center gap-3 group">
-                  <span className="w-9 h-9 rounded-lg bg-primary/12 border border-primary/20 flex items-center justify-center">
-                    <q.icon className="w-4 h-4 text-primary" />
-                  </span>
-                  <span className="font-medium text-text-primary flex-1">{q.label}</span>
-                  <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-                </Link>
-              </motion.div>
-            ))}
+            {workspaces.length === 0 && <p className="text-sm text-text-muted">No workspaces yet.</p>}
+            {workspaces.map((w) => {
+              const scanCount = scans.filter((s) => s.workspace_id === w.id).length;
+              const f = wsFindings[w.id];
+              return (
+                <motion.div key={w.id} whileHover={{ x: 3 }} transition={{ type: 'spring', stiffness: 300, damping: 22 }}>
+                  <Link to={`/projects/${w.id}/dashboard`} className="panel panel-interactive p-4 flex items-center gap-3 group">
+                    <span className="w-9 h-9 rounded-lg bg-primary/12 border border-primary/20 flex items-center justify-center">
+                      <FolderKanban className="w-4 h-4 text-primary" />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-text-primary truncate">{w.name}</p>
+                      <p className="text-xs text-text-muted">{scanCount} scan{scanCount === 1 ? '' : 's'} · {sevLoading ? '…' : (f ?? 0)} finding{f === 1 ? '' : 's'}</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </div>

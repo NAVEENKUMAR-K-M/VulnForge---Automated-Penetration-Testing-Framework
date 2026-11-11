@@ -6,10 +6,8 @@
   transition: border-color 0.15s ease;
 }
 .v-card.glass-panel {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 120px),
-    var(--bg-surface);
-  backdrop-filter: blur(6px);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
 }
 .v-card-solid { background: var(--bg-surface-solid); }
 

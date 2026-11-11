@@ -40,13 +40,13 @@ export const Sidebar: React.FC = () => {
     .split(/[\s@._]/).filter(Boolean).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('');
 
   return (
-    <aside className="w-60 shrink-0 bg-surface-solid/80 backdrop-blur-sm border-r border-border-color flex flex-col">
+    <aside className="w-60 shrink-0 bg-surface border-r border-border-color flex flex-col">
       <div className="px-5 h-16 flex items-center gap-2.5 border-b border-border-color">
         <motion.div
           whileHover={{ rotate: -8, scale: 1.05 }}
-          className="w-8 h-8 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center"
+          className="w-8 h-8 rounded-lg bg-ink flex items-center justify-center"
         >
-          <ShieldHalf className="w-5 h-5 text-primary" />
+          <ShieldHalf className="w-[18px] h-[18px] text-white" />
         </motion.div>
         <span className="font-display font-semibold text-lg tracking-tight text-text-primary">VulnForge</span>
       </div>

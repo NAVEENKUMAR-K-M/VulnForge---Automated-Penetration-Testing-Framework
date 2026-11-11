@@ -13,7 +13,7 @@ import { reportsApi } from '../../api/reports';
 import type { ReportVuln } from '../../api/reports';
 
 const SEV_COLOR: Record<string, string> = {
-  critical: '#F43F5E', high: '#FB7A3C', medium: '#FBBF24', low: '#38BDF8', info: '#8792A6',
+  critical: '#E11D48', high: '#EA580C', medium: '#CA8A04', low: '#0284C7', info: '#64748B',
 };
 
 export const ProjectDashboard: React.FC = () => {

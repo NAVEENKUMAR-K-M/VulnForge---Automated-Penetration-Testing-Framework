@@ -34,8 +34,8 @@ export const Login: React.FC = () => {
       {/* Brand panel */}
       <div className="hidden lg:flex flex-col justify-between p-12 border-r border-border-color relative overflow-hidden">
         <div className="relative z-10 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-primary/15 border border-primary/30 flex items-center justify-center">
-            <ShieldHalf className="w-5 h-5 text-primary" />
+          <div className="w-9 h-9 rounded-lg bg-ink flex items-center justify-center">
+            <ShieldHalf className="w-5 h-5 text-white" />
           </div>
           <span className="font-display font-semibold text-xl">VulnForge</span>
         </div>

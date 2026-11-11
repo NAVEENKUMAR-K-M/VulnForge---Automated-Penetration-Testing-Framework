@@ -27,26 +27,26 @@
 
 .glass-input {
   width: 100%;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   color: var(--text-primary);
   padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-md);
   outline: none;
   transition: all 0.2s ease;
 }
 
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface);
   border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px var(--accent-primary-alpha);
+  box-shadow: 0 0 0 3px var(--accent-primary-alpha);
 }
 
 .user-avatar {
   width: 36px;
   height: 36px;
   border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-hover));
   display: flex;
   align-items: center;
   justify-content: center;

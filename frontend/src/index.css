@@ -2,51 +2,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 /*
-  VulnForge — "operations console" design system.
-  Deep ink surfaces, a single indigo brand accent kept distinct from the
-  first-class severity palette, and JetBrains Mono for all technical data.
-  Tailwind v4 @theme tokens generate the bg-/text-/border- utilities the UI uses.
+  VulnForge — "Signal" design system.
+  A light, precise instrument where COLOR IS RESERVED FOR RISK: the chrome is a
+  disciplined cool-neutral (gray canvas, white cards, graphite ink, near-black
+  primary actions), the single brand accent is a restrained teal, and the only
+  saturated color in the product is severity/status. No gradients, no glass, no
+  ambient blobs — the data is the hero.
+  Tailwind v4 @theme tokens generate the bg-/text-/border- utilities.
 */
 @theme {
   /* Surfaces */
-  --color-base: #090C12;
-  --color-surface: #141925;
-  --color-surface-solid: #141925;
-  --color-surface-hover: #1E2534;
-  --color-elevated: #1A2030;
+  --color-base: #F5F6F8;          /* app canvas */
+  --color-surface: #FFFFFF;       /* cards / panels */
+  --color-surface-solid: #FFFFFF;
+  --color-surface-hover: #F1F3F6; /* hovered rows */
+  --color-elevated: #FFFFFF;
 
   /* Lines */
-  --color-border-color: #2B3547;
-  --color-border-hover: #3B4860;
+  --color-border-color: #E4E7EC;
+  --color-border-hover: #CBD1DA;
 
-  /* Text */
-  --color-text-primary: #E8ECF4;
-  --color-text-secondary: #94A1B8;
-  --color-text-muted: #5C6678;
+  /* Text (graphite) */
+  --color-text-primary: #14171C;
+  --color-text-secondary: #596170;
+  --color-text-muted: #8B93A1;
 
-  /* Brand accent (indigo) — deliberately NOT a severity color */
-  --color-primary: #6E7BFF;
-  --color-primary-hover: #8591FF;
-  --color-accent: #6E7BFF;
+  /* Brand accent (teal) — distinct from every severity color, never violet */
+  --color-primary: #0F766E;
+  --color-primary-hover: #0D9488;
+  --color-accent: #0F766E;
+
+  /* Near-black ink for primary actions */
+  --color-ink: #16181D;
 
   /* Status */
-  --color-success: #34D399;
-  --color-warning: #FBBF24;
-  --color-danger: #FB5B6B;
+  --color-success: #15935E;
+  --color-warning: #B45309;
+  --color-danger: #DC2626;
 
-  /* Severity scale (first-class for a vuln platform) */
-  --color-critical: #F43F5E;
-  --color-high: #FB7A3C;
-  --color-medium: #FBBF24;
-  --color-low: #38BDF8;
-  --color-info: #8792A6;
+  /* Severity scale (first-class; tuned for contrast on white) */
+  --color-critical: #E11D48;
+  --color-high: #EA580C;
+  --color-medium: #CA8A04;
+  --color-low: #0284C7;
+  --color-info: #64748B;
 
   /* Type */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-  --radius: 10px;
+  --radius: 8px;
 }
 
 :root {
@@ -54,23 +60,31 @@
   --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --bg-base: #090C12;
-  --bg-surface: #141925;
-  --bg-surface-solid: #141925;
-  --bg-surface-hover: #1E2534;
-  --border-color: #2B3547;
-  --border-color-hover: #3B4860;
-  --text-primary: #E8ECF4;
-  --text-secondary: #94A1B8;
-  --text-muted: #5C6678;
-  --accent-primary: #6E7BFF;
-  --accent-primary-hover: #8591FF;
-  --accent-success: #34D399;
-  --accent-warning: #FBBF24;
-  --accent-danger: #FB5B6B;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --bg-base: #F5F6F8;
+  --bg-surface: #FFFFFF;
+  --bg-surface-solid: #FFFFFF;
+  --bg-surface-hover: #F1F3F6;
+  --border-color: #E4E7EC;
+  --border-color-hover: #CBD1DA;
+  --text-primary: #14171C;
+  --text-secondary: #596170;
+  --text-muted: #8B93A1;
+  --accent-primary: #0F766E;
+  --accent-primary-hover: #0D9488;
+  --accent-primary-alpha: rgba(15, 118, 110, 0.18);
+  --accent-success: #15935E;
+  --accent-warning: #B45309;
+  --accent-danger: #DC2626;
+  --ink: #16181D;
+  --ink-hover: #000000;
+  --radius-md: 8px;
+  --radius-lg: 12px;
   --radius-full: 9999px;
+
+  /* Soft, single-source elevation (never heavy drop shadows) */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px -4px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 8px 28px -8px rgba(16, 24, 40, 0.16);
 }
 
 /* NOTE: do not add an unlayered universal margin/padding reset here. In
@@ -81,77 +95,48 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-sans);
-  background-color: #090C12;
-  color: #E8ECF4;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   line-height: 1.55;
   font-size: 14px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
-  position: relative;
-  /* Faint grid — a quiet "console" atmosphere */
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.016) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
-  background-size: 48px 48px, 48px 48px;
-  background-attachment: fixed;
-}
-
-/* Ambient aurora — two slow-drifting blobs behind everything */
-body::before {
-  content: "";
-  position: fixed;
-  inset: -20%;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(42rem 28rem at 82% -8%, rgba(110, 123, 255, 0.16), transparent 60%),
-    radial-gradient(38rem 26rem at 8% 108%, rgba(52, 211, 153, 0.08), transparent 60%),
-    radial-gradient(34rem 24rem at 60% 50%, rgba(139, 92, 246, 0.07), transparent 60%);
-  filter: blur(14px);
-  animation: aurora 26s ease-in-out infinite alternate;
-}
-@keyframes aurora {
-  0%   { transform: translate3d(0, 0, 0) scale(1); }
-  100% { transform: translate3d(-3%, 2%, 0) scale(1.06); }
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.12;
-  color: #E8ECF4;
-  letter-spacing: -0.015em;
+  line-height: 1.14;
+  color: var(--text-primary);
+  letter-spacing: -0.014em;
 }
 
-/* Glass surface for top bars / overlays */
+/* Elevated surface for floating overlays (command palette, menus).
+   Not frosted glass — a solid, crisp sheet. */
 .glass {
-  background: color-mix(in srgb, var(--bg-surface) 72%, transparent);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
 }
 
-/* Gradient text accent for hero headings */
+/* Kept for compatibility: renders as plain strong ink, no gradient fill. */
 .text-gradient {
-  background: linear-gradient(100deg, #E8ECF4 10%, #A9B2FF 60%, #6E7BFF 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
 }
 
-/* Interactive panel — lifts and glows on hover */
+/* Interactive panel — a quiet lift on hover, no glow */
 .panel-interactive {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 }
 .panel-interactive:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-color));
-  box-shadow: 0 1px 2px rgba(0,0,0,0.35), 0 18px 40px -22px rgba(110, 123, 255, 0.5);
+  border-color: var(--border-color-hover);
+  box-shadow: var(--shadow-md);
 }
 
-a { color: #6E7BFF; text-decoration: none; transition: color 0.15s ease; }
-a:hover { color: #8591FF; }
+a { color: var(--accent-primary); text-decoration: none; transition: color 0.15s ease; }
+a:hover { color: var(--accent-primary-hover); }
 
 button, input, select, textarea { font-family: inherit; color: inherit; }
 
@@ -164,27 +149,25 @@ code, kbd, pre, .mono { font-family: var(--font-mono); }
   letter-spacing: 0;
 }
 
-/* Focus ring — accessible and on-brand */
+/* Focus ring — accessible, on the brand teal */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
   border-radius: 6px;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 10px; height: 10px; }
+/* Scrollbar (light) */
+::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #222A38; border-radius: 9999px; border: 2px solid #0A0D13; }
-::-webkit-scrollbar-thumb:hover { background: #303B4E; }
+::-webkit-scrollbar-thumb { background: #D4D9E0; border-radius: 9999px; border: 3px solid var(--bg-base); }
+::-webkit-scrollbar-thumb:hover { background: #BBC2CC; }
 
-/* Reusable surface panel — subtle elevation so cards read as distinct surfaces */
+/* Reusable surface panel — a clean white card with a hairline border */
 .panel {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 80px),
-    var(--bg-surface);
+  background: var(--bg-surface);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px -16px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Reduced motion */
@@ -198,4 +181,4 @@ code, kbd, pre, .mono { font-family: var(--font-mono); }
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-.vf-rise { animation: vf-rise 0.35s ease both; }
+.vf-rise { animation: vf-rise 0.3s ease both; }

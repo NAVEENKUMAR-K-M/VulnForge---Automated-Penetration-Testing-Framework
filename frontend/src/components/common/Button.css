@@ -21,18 +21,19 @@
 .v-btn-lg { font-size: 0.95rem; padding: 12px 20px; }
 
 .v-btn-primary {
-  background: var(--accent-primary);
-  color: #0A0D13;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset;
+  background: var(--ink);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-sm);
 }
-.v-btn-primary:hover:not(:disabled) { background: var(--accent-primary-hover); }
+.v-btn-primary:hover:not(:disabled) { background: var(--ink-hover); }
 
 .v-btn-secondary {
-  background: var(--bg-surface-hover);
+  background: var(--bg-surface);
   color: var(--text-primary);
   border-color: var(--border-color);
+  box-shadow: var(--shadow-sm);
 }
-.v-btn-secondary:hover:not(:disabled) { border-color: var(--border-color-hover); background: #202838; }
+.v-btn-secondary:hover:not(:disabled) { border-color: var(--border-color-hover); background: var(--bg-surface-hover); }
 
 .v-btn-danger {
   background: color-mix(in srgb, var(--accent-danger) 16%, transparent);
