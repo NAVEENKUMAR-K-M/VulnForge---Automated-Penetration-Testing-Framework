@@ -126,9 +126,12 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
+            {rows.map((row, idx) => (
+              <motion.tr
                 key={keyFn(row)}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: Math.min(idx, 14) * 0.025, ease: [0.22, 1, 0.36, 1] }}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
                 className={`border-b border-border-color/60 last:border-0 transition-colors ${
                   onRowClick ? 'cursor-pointer hover:bg-surface-hover' : ''
@@ -139,7 +142,7 @@ export function DataTable<T>({
                     {c.cell(row)}
                   </td>
                 ))}
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>

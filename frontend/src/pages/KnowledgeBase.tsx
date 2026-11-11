@@ -3,9 +3,12 @@ import { Search, BookOpen, Database, Download, ExternalLink } from 'lucide-react
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
 import { PageHeader, StatCard, ErrorBanner, Spinner, EmptyState, Input, Select } from '../components/ui';
+import { SeverityBars } from '../components/charts';
 import { useAuth } from '../context/AuthContext';
 import { ragApi } from '../api/rag';
 import type { RagStats, RetrievalResult } from '../api/rag';
+
+const PALETTE = ['#6E7BFF', '#34D399', '#FBBF24', '#38BDF8', '#F43F5E', '#8B5CF6', '#FB7A3C'];
 
 export const KnowledgeBase: React.FC = () => {
   const { user } = useAuth();
@@ -70,6 +73,23 @@ export const KnowledgeBase: React.FC = () => {
           <StatCard label="Chunks" value={stats.total_chunks} icon={<Database className="w-5 h-5" />} />
           <StatCard label="Sources" value={Object.keys(stats.by_source).length} />
           <StatCard label="Embedding model" value={<span className="data text-sm leading-snug break-words block">{stats.embedding_model}</span>} />
+        </div>
+      )}
+
+      {stats && (stats.total_writeups > 0) && (
+        <div className="grid gap-5 md:grid-cols-2 mb-6">
+          <div className="panel p-5">
+            <h2 className="font-display font-semibold text-text-primary mb-2">Corpus by source</h2>
+            <SeverityBars data={Object.entries(stats.by_source).map(([name, value]) => ({ name, value, color: '#6E7BFF' }))} />
+          </div>
+          <div className="panel p-5">
+            <h2 className="font-display font-semibold text-text-primary mb-2">By vulnerability class</h2>
+            {Object.keys(stats.by_vuln_class).length ? (
+              <SeverityBars data={Object.entries(stats.by_vuln_class).map(([name, value], i) => ({ name, value, color: PALETTE[i % PALETTE.length] }))} />
+            ) : (
+              <p className="text-sm text-text-muted py-8 text-center">No classified writeups yet.</p>
+            )}
+          </div>
         </div>
       )}
 
