@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FolderKanban, Plus, ArrowRight } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { PageHeader, EmptyState, Loading, ErrorBanner, Modal, Field, Input, Textarea } from '../components/ui';
+import { Stagger, StaggerItem, motion } from '../components/motion';
 import { workspacesApi } from '../api/workspaces';
 import type { Workspace } from '../api/workspaces';
 
@@ -68,29 +69,28 @@ export const Workspaces: React.FC = () => {
           action={<Button variant="primary" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>New workspace</Button>}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((w) => (
-            <button
-              key={w.id}
-              onClick={() => navigate(`/projects/${w.id}/dashboard`)}
-              className="text-left panel p-5 hover:border-primary/50 transition-colors group"
-            >
-              <div className="flex items-start justify-between">
-                <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
-                  <FolderKanban className="w-5 h-5 text-primary" />
+            <StaggerItem key={w.id}>
+              <motion.button
+                onClick={() => navigate(`/projects/${w.id}/dashboard`)}
+                whileHover={{ y: -4 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+                className="w-full text-left panel panel-interactive p-5 group"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="w-10 h-10 rounded-xl bg-primary/15 border border-primary/25 flex items-center justify-center">
+                    <FolderKanban className="w-5 h-5 text-primary" />
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                 </div>
-                <ArrowRight className="w-4 h-4 text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
-              </div>
-              <h3 className="mt-4 font-display font-semibold text-text-primary">{w.name}</h3>
-              <p className="text-sm text-text-secondary mt-1 line-clamp-2">
-                {w.description || 'No description'}
-              </p>
-              <p className="data text-xs text-text-muted mt-3">
-                Created {new Date(w.created_at).toLocaleDateString()}
-              </p>
-            </button>
+                <h3 className="mt-4 font-display font-semibold text-text-primary">{w.name}</h3>
+                <p className="text-sm text-text-secondary mt-1 line-clamp-2">{w.description || 'No description'}</p>
+                <p className="data text-xs text-text-muted mt-3">Created {new Date(w.created_at).toLocaleDateString()}</p>
+              </motion.button>
+            </StaggerItem>
           ))}
-        </div>
+        </Stagger>
       )}
 
       <Modal

@@ -1,7 +1,9 @@
 import React from 'react';
 import type { ReactNode, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { Loader2, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Badge } from './common/Badge';
+import { CountUp } from './motion';
 
 /* ── Page header ─────────────────────────────────────────────────────────── */
 export const PageHeader: React.FC<{
@@ -62,14 +64,29 @@ export const StatCard: React.FC<{
     warning: 'text-warning',
     success: 'text-success',
   };
+  const toneBar: Record<string, string> = {
+    default: 'var(--color-primary)',
+    primary: 'var(--color-primary)',
+    danger: 'var(--color-danger)',
+    warning: 'var(--color-warning)',
+    success: 'var(--color-success)',
+  };
+  const isNum = typeof value === 'number';
   return (
-    <div className="panel p-5 relative overflow-hidden">
+    <motion.div
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      className="panel panel-interactive p-5 relative overflow-hidden"
+    >
+      <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: toneBar[tone], opacity: tone === 'default' ? 0.35 : 0.9 }} />
       <div className="flex items-start justify-between">
         <span className="text-xs uppercase tracking-wider text-text-muted">{label}</span>
         {icon && <span className="text-text-muted">{icon}</span>}
       </div>
-      <div className={`mt-3 text-3xl font-display font-semibold ${toneColor[tone]}`}>{value}</div>
-    </div>
+      <div className={`mt-3 text-3xl font-display font-semibold tabular-nums ${toneColor[tone]}`}>
+        {isNum ? <CountUp value={value} /> : value}
+      </div>
+    </motion.div>
   );
 };
 

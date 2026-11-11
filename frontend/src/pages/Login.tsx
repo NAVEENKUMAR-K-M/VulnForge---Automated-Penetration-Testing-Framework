@@ -40,7 +40,7 @@ export const Login: React.FC = () => {
           <span className="font-display font-semibold text-xl">VulnForge</span>
         </div>
         <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-display font-semibold leading-tight">
+          <h1 className="text-4xl font-display font-semibold leading-tight text-gradient">
             The security operations console for automated assessment.
           </h1>
           <p className="text-text-secondary mt-4 leading-relaxed">
