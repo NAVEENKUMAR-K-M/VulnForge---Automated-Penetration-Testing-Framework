@@ -12,13 +12,16 @@ export const PageHeader: React.FC<{
   eyebrow?: string;
   actions?: ReactNode;
 }> = ({ title, subtitle, eyebrow, actions }) => (
-  <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+  <div className="flex items-start justify-between gap-4 flex-wrap mb-7">
     <div>
       {eyebrow && (
-        <div className="data text-xs uppercase tracking-widest text-primary/80 mb-2">{eyebrow}</div>
+        <div className="flex items-center gap-2 mb-2.5">
+          <span className="h-3 w-[3px] rounded-full bg-primary" />
+          <span className="data text-xs uppercase tracking-[0.2em] text-primary/90">{eyebrow}</span>
+        </div>
       )}
-      <h1 className="text-2xl font-display font-semibold text-text-primary">{title}</h1>
-      {subtitle && <p className="text-text-secondary mt-1 max-w-2xl">{subtitle}</p>}
+      <h1 className="font-display font-semibold text-text-primary tracking-tight" style={{ fontSize: 'clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem)' }}>{title}</h1>
+      {subtitle && <p className="text-text-secondary mt-1.5 max-w-2xl leading-relaxed">{subtitle}</p>}
     </div>
     {actions && <div className="flex items-center gap-2">{actions}</div>}
   </div>
