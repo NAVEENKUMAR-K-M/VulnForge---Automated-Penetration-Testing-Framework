@@ -37,6 +37,13 @@ class WebCrawlerPlugin(BasePlugin):
             "timeout": 10,
             "verify_tls": False,
             "user_agent": "VulnForge-Crawler/1.0",
+            # Optional authenticated crawling. Either static credentials:
+            #   "auth": {"headers": {"Authorization": "Bearer …"},
+            #            "cookies": {"session": "…"}}
+            # …or a form login (cookies are captured and reused):
+            #   "auth": {"login_url": "https://host/login", "login_method": "POST",
+            #            "login_data": {"username": "u", "password": "p"}}
+            "auth": {},
         },
         plugin_metadata={"author": "VulnForge", "requires": "python-httpx"},
     )
@@ -53,6 +60,7 @@ class WebCrawlerPlugin(BasePlugin):
                 timeout=float(self.config.get("timeout", 10)),
                 verify_tls=bool(self.config.get("verify_tls", False)),
                 user_agent=str(self.config.get("user_agent", "VulnForge-Crawler/1.0")),
+                auth=self.config.get("auth") or None,
             )
         except Exception as exc:  # noqa: BLE001
             return PluginExecutionResult(success=False, raw_output="", error_message=str(exc))

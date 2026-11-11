@@ -41,6 +41,48 @@ def normalize_base(target: str) -> str:
     return t.rstrip("/")
 
 
+def make_client(
+    *, timeout: float, verify_tls: bool, user_agent: str,
+    auth: dict[str, Any] | None = None, follow_redirects: bool = True,
+) -> httpx.AsyncClient:
+    """Build an httpx client, carrying any static auth (headers + cookies).
+
+    ``auth`` may contain ``headers`` and ``cookies`` dicts (applied to every
+    request) and form-login fields consumed by :func:`apply_auth`.
+    """
+    headers: dict[str, str] = {"User-Agent": user_agent}
+    cookies: dict[str, str] | None = None
+    if auth:
+        headers.update({str(k): str(v) for k, v in (auth.get("headers") or {}).items()})
+        cookies = {str(k): str(v) for k, v in (auth.get("cookies") or {}).items()} or None
+    return httpx.AsyncClient(
+        follow_redirects=follow_redirects, timeout=timeout, verify=verify_tls,
+        headers=headers, cookies=cookies,
+    )
+
+
+async def apply_auth(client: httpx.AsyncClient, auth: dict[str, Any] | None) -> bool:
+    """Perform a form login if configured, so session cookies stick to ``client``.
+
+    ``auth`` shape (all optional): ``login_url``, ``login_method`` (POST),
+    ``login_data`` (the credentials/fields to submit). Returns True if a login
+    request was attempted and did not error. Static headers/cookies are applied
+    at client creation, so no login request is needed for those.
+    """
+    if not auth or not auth.get("login_url"):
+        return False
+    method = str(auth.get("login_method") or "POST").upper()
+    data = {**(auth.get("login_data") or {})}
+    try:
+        if method == "GET":
+            await client.get(auth["login_url"], params=data)
+        else:
+            await client.request(method, auth["login_url"], data=data)
+        return True
+    except Exception:  # noqa: BLE001 - a failed login must not abort the scan
+        return False
+
+
 async def crawl_site(
     target: str,
     *,
@@ -49,6 +91,7 @@ async def crawl_site(
     timeout: float = 10.0,
     verify_tls: bool = False,
     user_agent: str = "VulnForge-Crawler/1.0",
+    auth: dict[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Spider ``target`` (same host only) and return (endpoints, transactions).
 
@@ -78,10 +121,10 @@ async def crawl_site(
         for p in params:
             entry["parameters"][(p["name"], p["location"])] = p
 
-    async with httpx.AsyncClient(
-        follow_redirects=True, timeout=timeout, verify=verify_tls,
-        headers={"User-Agent": user_agent},
+    async with make_client(
+        timeout=timeout, verify_tls=verify_tls, user_agent=user_agent, auth=auth,
     ) as client:
+        await apply_auth(client, auth)
         while frontier and len(visited) < max_pages:
             url, depth = frontier.popleft()
             norm = canon(url)
