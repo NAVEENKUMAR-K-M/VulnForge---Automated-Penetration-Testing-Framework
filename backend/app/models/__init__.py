@@ -41,6 +41,13 @@ from app.models.workspace import (
 from app.models.scope import ScopeRule, ScopeRuleType, ScopeDisposition
 from app.models.scan_profile import ScanProfile, ScanProfilePlugin, ProfileType
 from app.models.asset import DiscoveredAsset, AssetType
+from app.models.web import (
+    HttpEndpoint,
+    HttpTransaction,
+    HttpMethod,
+    ParameterLocation,
+    TransactionSource,
+)
 from app.models.writeup import Writeup, WriteupChunk, WriteupSource
 from app.models.agent_run import (
     AgentRun,
@@ -103,6 +110,12 @@ __all__ = [
     # Assets
     "DiscoveredAsset",
     "AssetType",
+    # Web attack surface
+    "HttpEndpoint",
+    "HttpTransaction",
+    "HttpMethod",
+    "ParameterLocation",
+    "TransactionSource",
     # RAG corpus
     "Writeup",
     "WriteupChunk",

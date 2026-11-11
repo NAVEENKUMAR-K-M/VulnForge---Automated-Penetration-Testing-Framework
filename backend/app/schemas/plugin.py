@@ -70,7 +70,9 @@ class PluginResponse(TimestampedResponse):
 
 class ParsedResults(VulnForgeBaseModel):
     """The final parsed output from a plugin execution."""
-    
+
     vulnerabilities: list[Any] = Field(default_factory=list, description="List of VulnerabilityCreate objects.")
     assets: list[Any] = Field(default_factory=list, description="List of AssetCreate objects.")
+    endpoints: list[Any] = Field(default_factory=list, description="List of HttpEndpointCreate objects (web surface).")
+    transactions: list[Any] = Field(default_factory=list, description="List of HttpTransactionCreate objects (evidence).")
 

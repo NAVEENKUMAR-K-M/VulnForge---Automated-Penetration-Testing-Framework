@@ -39,6 +39,7 @@ from app.models.target import Target
 from app.repositories.asset import AssetRepository
 from app.repositories.scope import ScopeRepository
 from app.repositories.vulnerability import VulnerabilityRepository
+from app.repositories.web import EndpointRepository, TransactionRepository
 from app.tasks.celery_app import celery_app
 
 logger = get_logger(__name__)
@@ -227,6 +228,19 @@ async def _run_one_plugin(
                     plugin_execution_id=spe_id,
                     vulnerabilities=parsed.vulnerabilities,
                 )
+            if parsed.endpoints and workspace_id is not None:
+                await EndpointRepository(session).ingest_endpoints(
+                    workspace_id=workspace_id,
+                    target_id=target_id,
+                    scan_id=scan_pk,
+                    endpoints=parsed.endpoints,
+                )
+            if parsed.transactions and workspace_id is not None:
+                await TransactionRepository(session).add_transactions(
+                    workspace_id=workspace_id,
+                    scan_id=scan_pk,
+                    transactions=parsed.transactions,
+                )
             await session.commit()
 
         await _finish_execution(
@@ -236,6 +250,8 @@ async def _run_one_plugin(
             "plugin.completed",
             assets=len(parsed.assets),
             vulnerabilities=len(parsed.vulnerabilities),
+            endpoints=len(parsed.endpoints),
+            transactions=len(parsed.transactions),
         )
         return "executed"
 
