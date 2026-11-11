@@ -45,9 +45,9 @@ export const Register: React.FC = () => {
         <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
           <ShieldAlert size={48} className="text-primary" style={{ margin: '0 auto var(--space-3)' }} />
           <h1 className="text-3xl font-bold" style={{ 
-            background: 'linear-gradient(90deg, #fff, #8b949e)', 
+            background: 'none', color: 'var(--text-primary)',
             WebkitBackgroundClip: 'text', 
-            WebkitTextFillColor: 'transparent' 
+            WebkitTextFillColor: 'currentColor'
           }}>
             VulnForge
           </h1>
@@ -59,13 +59,13 @@ export const Register: React.FC = () => {
             <h2 className="text-xl font-semibold" style={{ margin: 0 }}>Register</h2>
           </CardHeader>
           <CardBody>
-            <form onSubmit={handleRegister} className="flex-col gap-4">
+            <form onSubmit={handleRegister} className="flex flex-col gap-4">
               {error && (
                 <div style={{ background: 'var(--accent-danger-alpha)', color: '#ff7b72', padding: '8px 12px', borderRadius: '4px', fontSize: '14px', border: '1px solid rgba(248,81,73,0.3)' }}>
                   {error}
                 </div>
               )}
-              <div className="flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-secondary">Full Name</label>
                 <input 
                   type="text" 
@@ -75,7 +75,7 @@ export const Register: React.FC = () => {
                   required 
                 />
               </div>
-              <div className="flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-secondary">Email address</label>
                 <input 
                   type="email" 
@@ -85,7 +85,7 @@ export const Register: React.FC = () => {
                   required 
                 />
               </div>
-              <div className="flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-secondary">Password</label>
                 <input 
                   type="password" 
@@ -96,7 +96,7 @@ export const Register: React.FC = () => {
                   minLength={8}
                 />
               </div>
-              <div className="flex-col gap-2">
+              <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-secondary">Confirm Password</label>
                 <input 
                   type="password" 

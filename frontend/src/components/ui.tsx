@@ -196,7 +196,7 @@ export const Field: React.FC<{ label: string; hint?: string; children: ReactNode
 );
 
 const controlClasses =
-  'bg-surface border border-border-color rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none';
+  'bg-surface border border-border-hover rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted transition-colors focus:border-primary focus:outline-none';
 
 export const Input: React.FC<InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...p }) => (
   <input className={`${controlClasses} ${className}`} {...p} />

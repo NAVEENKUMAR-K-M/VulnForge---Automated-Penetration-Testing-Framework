@@ -81,6 +81,17 @@
   --radius-lg: 12px;
   --radius-full: 9999px;
 
+  /* Spacing + size scale (referenced by legacy auth pages / layout css) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --text-sm: 0.875rem;
+  --accent-danger-alpha: rgba(220, 38, 38, 0.12);
+
   /* Soft, single-source elevation (never heavy drop shadows) */
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
   --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px -4px rgba(16, 24, 40, 0.08);
@@ -147,6 +158,25 @@ code, kbd, pre, .mono { font-family: var(--font-mono); }
   font-family: var(--font-mono);
   font-size: 0.86em;
   letter-spacing: 0;
+}
+
+/* Auth-page inputs (legacy .glass-input lives here so it loads globally —
+   the MainLayout.css copy only applies when that layout is mounted). */
+.glass-input {
+  width: 100%;
+  min-height: 40px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color-hover);
+  color: var(--text-primary);
+  padding: 9px 13px;
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.glass-input::placeholder { color: var(--text-muted); }
+.glass-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-primary-alpha);
 }
 
 /* Focus ring — accessible, on the brand teal */
