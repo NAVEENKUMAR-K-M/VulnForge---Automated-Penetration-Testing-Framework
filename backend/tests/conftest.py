@@ -13,6 +13,7 @@ Fixture scopes:
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -21,6 +22,7 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text as _sa_text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -39,18 +41,28 @@ from app.models.user import User, UserRole
 
 # ── Test Settings ──────────────────────────────────────────────────────────────
 
+# DB connection is env-overridable so the suite runs both locally (localhost)
+# and inside the api container against the compose `db` service. Defaults keep
+# the original local-run behavior.
+_DB_HOST = os.getenv("TEST_POSTGRES_HOST", "localhost")
+_DB_PORT = int(os.getenv("TEST_POSTGRES_PORT", "5432"))
+_DB_USER = os.getenv("TEST_POSTGRES_USER", "vulnforge_user")
+_DB_PASSWORD = os.getenv("TEST_POSTGRES_PASSWORD", "test_password")
+_DB_NAME = os.getenv("TEST_POSTGRES_DB", "vulnforge_test")
+_REDIS_HOST = os.getenv("TEST_REDIS_HOST", "localhost")
+
 TEST_SETTINGS_OVERRIDES: dict[str, Any] = {
     "app_env": "development",
     "debug": True,
     "log_level": "WARNING",
     "log_format": "CONSOLE",
     "secret_key": "a" * 64,
-    "postgres_host": "localhost",
-    "postgres_port": 5432,
-    "postgres_db": "vulnforge_test",
-    "postgres_user": "vulnforge_user",
-    "postgres_password": "test_password",
-    "redis_host": "localhost",
+    "postgres_host": _DB_HOST,
+    "postgres_port": _DB_PORT,
+    "postgres_db": _DB_NAME,
+    "postgres_user": _DB_USER,
+    "postgres_password": _DB_PASSWORD,
+    "redis_host": _REDIS_HOST,
     "redis_port": 6379,
     "first_superuser_email": "admin@test.local",
     "first_superuser_password": "Admin!Test1234",
@@ -63,8 +75,8 @@ TEST_SETTINGS_OVERRIDES: dict[str, Any] = {
 }
 
 TEST_DATABASE_URL = (
-    "postgresql+asyncpg://vulnforge_user:test_password"
-    "@localhost:5432/vulnforge_test"
+    f"postgresql+asyncpg://{_DB_USER}:{_DB_PASSWORD}"
+    f"@{_DB_HOST}:{_DB_PORT}/{_DB_NAME}"
 )
 
 
@@ -105,18 +117,47 @@ async def test_db_engine(test_settings: Settings) -> AsyncGenerator[AsyncEngine,
     Yields:
         AsyncEngine: Connected test database engine.
     """
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        poolclass=NullPool,
-        echo=False,
+    import subprocess
+    from pathlib import Path
+
+    # Reset the public schema so the session starts from a known-clean state.
+    reset_engine = create_async_engine(
+        TEST_DATABASE_URL, poolclass=NullPool, isolation_level="AUTOCOMMIT"
     )
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    async with reset_engine.connect() as conn:
+        await conn.execute(_sa_text("DROP SCHEMA IF EXISTS public CASCADE"))
+        await conn.execute(_sa_text("CREATE SCHEMA public"))
+    await reset_engine.dispose()
+
+    # Build the schema with the real Alembic migrations rather than
+    # metadata.create_all: the audit_logs table is partitioned (PARTITION BY
+    # RANGE) and cannot be created by SQLAlchemy's generic DDL. Migrations also
+    # (re)create the required extensions (pgcrypto, pg_trgm, vector). Run in a
+    # subprocess so Alembic's env.py reads fresh, test-pointed settings.
+    alembic_env = {
+        **os.environ,
+        "POSTGRES_HOST": _DB_HOST,
+        "POSTGRES_PORT": str(_DB_PORT),
+        "POSTGRES_DB": _DB_NAME,
+        "POSTGRES_USER": _DB_USER,
+        "POSTGRES_PASSWORD": _DB_PASSWORD,
+    }
+    result = subprocess.run(
+        ["alembic", "upgrade", "head"],
+        cwd=str(Path(__file__).resolve().parents[1]),  # backend/ (alembic.ini)
+        env=alembic_env,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"Alembic migrations failed for the test DB:\n{result.stdout}\n{result.stderr}"
+        )
+
+    engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, echo=False)
 
     yield engine
 
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
 
 
@@ -179,8 +220,15 @@ async def client(
     def override_get_settings() -> Settings:
         return test_settings
 
+    # The app resolves settings through get_settings_dep (which internally calls
+    # get_settings()), so overriding get_settings alone is ineffective — the
+    # token-decode path would verify with the real secret while tests sign with
+    # the test secret. Override the actual dependency callable.
+    from app.api.deps import get_settings_dep
+
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_settings] = override_get_settings
+    app.dependency_overrides[get_settings_dep] = override_get_settings
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -209,7 +257,7 @@ async def test_user(db_session: AsyncSession) -> User:
     user = await repo.create_from_dict(
         {
             "username": f"testuser_{uuid.uuid4().hex[:8]}",
-            "email": f"test_{uuid.uuid4().hex[:8]}@vulnforge.local",
+            "email": f"test_{uuid.uuid4().hex[:8]}@vulnforge.io",
             "hashed_password": hash_password("Test!Pass1234"),
             "full_name": "Test Analyst",
             "role": UserRole.ANALYST,
@@ -236,7 +284,7 @@ async def test_admin(db_session: AsyncSession) -> User:
     user = await repo.create_from_dict(
         {
             "username": f"admin_{uuid.uuid4().hex[:8]}",
-            "email": f"admin_{uuid.uuid4().hex[:8]}@vulnforge.local",
+            "email": f"admin_{uuid.uuid4().hex[:8]}@vulnforge.io",
             "hashed_password": hash_password("Admin!Pass1234"),
             "full_name": "Test Admin",
             "role": UserRole.ADMIN,
@@ -263,7 +311,7 @@ async def test_superuser(db_session: AsyncSession) -> User:
     user = await repo.create_from_dict(
         {
             "username": f"superuser_{uuid.uuid4().hex[:8]}",
-            "email": f"super_{uuid.uuid4().hex[:8]}@vulnforge.local",
+            "email": f"super_{uuid.uuid4().hex[:8]}@vulnforge.io",
             "hashed_password": hash_password("Super!Pass1234"),
             "full_name": "Test Superuser",
             "role": UserRole.ADMIN,

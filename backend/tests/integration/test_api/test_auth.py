@@ -39,7 +39,7 @@ class TestRegisterEndpoint:
             REGISTER_URL,
             json={
                 "username": "newanalyst01",
-                "email": "newanalyst01@vulnforge.local",
+                "email": "newanalyst01@vulnforge.io",
                 "password": "Str0ng!P4ssw0rd#",
                 "full_name": "New Analyst",
             },
@@ -52,7 +52,7 @@ class TestRegisterEndpoint:
         assert body["tokens"]["access_token"]
         assert body["tokens"]["refresh_token"]
         assert body["tokens"]["token_type"] == "bearer"
-        assert body["user"]["email"] == "newanalyst01@vulnforge.local"
+        assert body["user"]["email"] == "newanalyst01@vulnforge.io"
         assert body["user"]["role"] == "viewer"  # Default role
 
     @pytest.mark.asyncio
@@ -79,7 +79,7 @@ class TestRegisterEndpoint:
             REGISTER_URL,
             json={
                 "username": "weakpassuser",
-                "email": "weakpass@vulnforge.local",
+                "email": "weakpass@vulnforge.io",
                 "password": "weakpassword",  # No uppercase, digit, special char
             },
         )
@@ -94,7 +94,7 @@ class TestRegisterEndpoint:
             REGISTER_URL,
             json={
                 "username": "shortpassuser",
-                "email": "short@vulnforge.local",
+                "email": "short@vulnforge.io",
                 "password": "Sh0rt!",
             },
         )
@@ -137,7 +137,7 @@ class TestLoginEndpoint:
         """Unknown email returns 401 (same as wrong password — prevents enumeration)."""
         response = await client.post(
             LOGIN_URL,
-            json={"email": "nobody@vulnforge.local", "password": "Any!Pass1234"},
+            json={"email": "nobody@vulnforge.io", "password": "Any!Pass1234"},
         )
         assert response.status_code == 401
 
