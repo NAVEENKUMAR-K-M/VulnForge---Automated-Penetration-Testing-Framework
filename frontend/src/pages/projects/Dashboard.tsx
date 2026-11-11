@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Crosshair, Server, Bug, Radar, ArrowRight, Activity, ShieldAlert } from 'lucide-react';
-import { PageHeader, StatCard, Loading, DataTable, StatusBadge } from '../../components/ui';
+import { PageHeader, StatCard, Loading, DataTable, StatusBadge, Spinner } from '../../components/ui';
 import type { Column } from '../../components/ui';
 import { Stagger, StaggerItem } from '../../components/motion';
 import { ActivityArea, SeverityBars } from '../../components/charts';
@@ -21,22 +21,24 @@ export const ProjectDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [scans, setScans] = useState<Scan[]>([]);
   const [vulns, setVulns] = useState<ReportVuln[]>([]);
+  const [vulnsLoading, setVulnsLoading] = useState(true);
   const [counts, setCounts] = useState({ targets: 0, assets: 0 });
 
   useEffect(() => {
     if (!id) return;
+    // Fast data renders the page immediately.
     setLoading(true);
-    Promise.allSettled([scansApi.list(id), assetsApi.list(id), targetsApi.list(id), reportsApi.getJson(id)]).then(
-      ([s, a, t, r]) => {
-        if (s.status === 'fulfilled') setScans(s.value);
-        if (r.status === 'fulfilled') setVulns(r.value.vulnerabilities);
-        setCounts({
-          targets: t.status === 'fulfilled' ? t.value.length : 0,
-          assets: a.status === 'fulfilled' ? a.value.length : 0,
-        });
-        setLoading(false);
-      }
-    );
+    Promise.allSettled([scansApi.list(id), assetsApi.list(id), targetsApi.list(id)]).then(([s, a, t]) => {
+      if (s.status === 'fulfilled') setScans(s.value);
+      setCounts({
+        targets: t.status === 'fulfilled' ? t.value.length : 0,
+        assets: a.status === 'fulfilled' ? a.value.length : 0,
+      });
+      setLoading(false);
+    });
+    // Findings come from report generation (slower) — load without blocking the page.
+    setVulnsLoading(true);
+    reportsApi.getJson(id).then((r) => setVulns(r.vulnerabilities)).catch(() => {}).finally(() => setVulnsLoading(false));
   }, [id]);
 
   const sev = useMemo(() => {
@@ -94,7 +96,9 @@ export const ProjectDashboard: React.FC = () => {
         </div>
         <div className="panel p-5 lg:col-span-2">
           <h2 className="font-display font-semibold text-text-primary mb-1">Findings by severity</h2>
-          {vulns.length ? (
+          {vulnsLoading ? (
+            <div className="flex justify-center items-center py-16"><Spinner /></div>
+          ) : vulns.length ? (
             <SeverityBars data={sevData.filter((d) => d.value > 0)} />
           ) : (
             <div className="flex flex-col items-center justify-center py-12 text-text-muted">
