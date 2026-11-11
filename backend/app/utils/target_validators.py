@@ -312,8 +312,10 @@ def validate_url(value: str) -> str:
     if len(stripped) > 2048:
         raise ValueError("URL exceeds maximum length of 2048 characters.")
 
-    # Reconstruct with lowercased scheme and hostname for normalisation
-    normalised = stripped.replace(f"{parsed.scheme}://", f"{scheme}://", 1)
+    # Reconstruct with the lowercased scheme. urlparse already lowercases
+    # parsed.scheme, so a replace() of that against the original (possibly
+    # upper-case) text would silently no-op; rebuild from the part after "://".
+    normalised = f"{scheme}://{stripped.split('://', 1)[1]}"
     return normalised
 
 

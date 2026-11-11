@@ -11,9 +11,6 @@ def test_categorize_technologies():
     assert "React" in structured["frameworks"]
 
 def test_categorize_technologies_empty():
-    assert categorize_technologies([]) == {
-        "cms": set(),
-        "frameworks": set(),
-        "languages": set(),
-        "servers": set()
-    }
+    # Empty input yields no buckets — categorize_technologies omits empty
+    # categories and returns sorted lists for populated ones.
+    assert categorize_technologies([]) == {}

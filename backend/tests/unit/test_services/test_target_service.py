@@ -112,9 +112,10 @@ class TestCreateTarget:
         """Analyst can create a host target."""
         user = make_user()
         svc, repo, audit = make_service()
-        repo.value_exists.return_value = False
+        repo.get_by_value.return_value = None  # no existing target → create new
         new_target = make_target(user.id, value="10.0.0.1")
         repo.create_from_dict.return_value = new_target
+        repo.get.return_value = new_target
         repo.get_with_counts.return_value = (new_target, 0, 0)
         repo.get_tags.return_value = []
 
@@ -129,28 +130,36 @@ class TestCreateTarget:
         audit.create_entry.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_duplicate_value_type_raises_conflict(self) -> None:
-        """Creating a target with duplicate value+type raises ConflictError."""
+    async def test_duplicate_value_type_reuses_existing(self) -> None:
+        """A duplicate value+type reuses the existing global target (no new row)."""
         user = make_user()
         svc, repo, _ = make_service()
-        repo.value_exists.return_value = True  # Already exists
+        existing = make_target(user.id, value="10.0.0.1")
+        repo.get_by_value.return_value = existing  # already exists → reuse
+        repo.get.return_value = existing
+        repo.get_with_counts.return_value = (existing, 0, 0)
+        repo.get_tags.return_value = []
 
         data = TargetCreate(
             name="Duplicate",
             target_type=TargetType.HOST,
             value="10.0.0.1",
         )
-        with pytest.raises(ConflictError):
-            await svc.create_target(data=data, current_user=user)
+        result = await svc.create_target(data=data, current_user=user)
+
+        # Existing target is reused; no new target is created.
+        repo.create_from_dict.assert_not_called()
+        assert result.id == existing.id
 
     @pytest.mark.asyncio
     async def test_create_target_with_tags(self) -> None:
         """Tags are saved when provided during creation."""
         user = make_user()
         svc, repo, _ = make_service()
-        repo.value_exists.return_value = False
+        repo.get_by_value.return_value = None  # no existing target → create new
         new_target = make_target(user.id)
         repo.create_from_dict.return_value = new_target
+        repo.get.return_value = new_target
         repo.get_with_counts.return_value = (new_target, 0, 0)
         repo.get_tags.return_value = []
 

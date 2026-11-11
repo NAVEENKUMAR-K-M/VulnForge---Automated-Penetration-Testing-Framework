@@ -120,8 +120,8 @@ class TestValidateNetwork:
             validate_network("0.0.0.0/0")
 
     def test_rejects_small_prefix_ipv4(self) -> None:
-        # /7 is too broad
-        with pytest.raises(ValueError, match="too broad"):
+        # /7 is too broad — IPv4 targets must be /8 or smaller
+        with pytest.raises(ValueError, match=r"/8 or smaller"):
             validate_network("10.0.0.0/7")
 
     def test_rejects_small_prefix_ipv6(self) -> None:

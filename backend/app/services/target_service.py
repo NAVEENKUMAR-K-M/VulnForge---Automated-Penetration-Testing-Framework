@@ -158,10 +158,11 @@ class TargetService:
         current_user: User,
         ip_address: str | None = None,
     ) -> TargetResponse:
-        """Create a new target.
+        """Create a new target, or reuse an existing one.
 
         The value is already validated and normalised by the Pydantic schema.
-        This method enforces global uniqueness (value + type combination).
+        Targets are global and deduplicated on (value + type): if a matching
+        target already exists it is reused rather than duplicated.
 
         Args:
             data:         Validated creation payload.
@@ -169,10 +170,7 @@ class TargetService:
             ip_address:   Client IP for audit logging.
 
         Returns:
-            TargetResponse: The created target.
-
-        Raises:
-            ConflictError: If a target with this value+type already exists.
+            TargetResponse: The created (or reused) target.
         """
         logger.info(
             "target.create.attempt",

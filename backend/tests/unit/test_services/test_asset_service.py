@@ -19,7 +19,7 @@ def mock_db() -> AsyncMock:
 
 @pytest.fixture
 def service(mock_db: AsyncMock) -> AssetService:
-    svc = AssetService(mock_db)
+    svc = AssetService(mock_db, MagicMock())
     svc._repo = AsyncMock()
     svc._workspace_svc = AsyncMock()
     return svc
@@ -59,7 +59,7 @@ async def test_list_assets_enforces_rbac(service: AssetService) -> None:
     
     await service.list_assets(workspace_id, user)
     
-    # Should have called workspace service to check membership
-    service._workspace_svc.assert_membership.assert_called_once_with(
-        workspace_id=workspace_id, user_id=user.id
+    # Should have called workspace service to enforce access (VIEWER+).
+    service._workspace_svc.get_workspace.assert_awaited_once_with(
+        workspace_id=workspace_id, current_user=user
     )

@@ -52,8 +52,9 @@ def make_user(**overrides: object) -> User:
     """Create a mock User ORM instance."""
     user = MagicMock(spec=User)
     user.id = uuid.uuid4()
-    user.email = "test@vulnforge.local"
+    user.email = "test@vulnforge.io"
     user.username = "testanalyst"
+    user.full_name = "Test Analyst"
     user.hashed_password = hash_password("Test!Pass1234")
     user.role = UserRole.ANALYST
     user.is_active = True
@@ -63,6 +64,8 @@ def make_user(**overrides: object) -> User:
     user.failed_login_attempts = 0
     user.password_reset_token_hash = None
     user.password_reset_expires_at = None
+    user.created_at = datetime.now(tz=timezone.utc)
+    user.updated_at = datetime.now(tz=timezone.utc)
     for key, value in overrides.items():
         setattr(user, key, value)
     return user
@@ -130,7 +133,7 @@ class TestRegister:
 
         data = UserCreate(
             username="newanalyst",
-            email="new@vulnforge.local",
+            email="new@vulnforge.io",
             password="Str0ng!P4ssw0rd#",
         )
 
@@ -150,7 +153,7 @@ class TestRegister:
 
         data = UserCreate(
             username="someuser",
-            email="taken@vulnforge.local",
+            email="taken@vulnforge.io",
             password="Str0ng!P4ssw0rd#",
         )
 
@@ -166,7 +169,7 @@ class TestRegister:
 
         data = UserCreate(
             username="taken",
-            email="unique@vulnforge.local",
+            email="unique@vulnforge.io",
             password="Str0ng!P4ssw0rd#",
         )
 
@@ -210,7 +213,7 @@ class TestLogin:
         user_repo.get_by_email.return_value = None
 
         with pytest.raises(AuthenticationError):
-            await svc.login(email="nobody@vulnforge.local", password="Any!Pass1234")
+            await svc.login(email="nobody@vulnforge.io", password="Any!Pass1234")
 
     @pytest.mark.asyncio
     async def test_login_disabled_account_raises(self) -> None:

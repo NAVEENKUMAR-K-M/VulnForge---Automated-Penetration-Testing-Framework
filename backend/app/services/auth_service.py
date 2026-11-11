@@ -52,6 +52,12 @@ from app.schemas.user import UserCreate, UserResponse
 
 logger = get_logger(__name__)
 
+# A real bcrypt hash, computed once, used as the comparison target when a login
+# is attempted for an unknown email. Verifying against a valid hash keeps the
+# password check constant-time (timing-based user enumeration mitigation) and
+# avoids raising on a malformed hash.
+_DUMMY_PASSWORD_HASH = sec.hash_password("vulnforge-timing-attack-mitigation")
+
 
 class AuthService:
     """Orchestrates all authentication and authorisation operations.
@@ -251,9 +257,10 @@ class AuthService:
         # ── Load user ──────────────────────────────────────────────────────
         user = await self._user_repo.get_by_email(email)
 
-        # Always hash even if user not found — prevents timing-based enum
-        dummy_hash = "$2b$12$invalidhashtopreventtimingattacks000000000000000000000"
-        compare_hash = user.hashed_password if user else dummy_hash
+        # Always verify against a real hash even if the user is not found — a
+        # malformed hash would raise (and return instantly), defeating the
+        # timing-based-enumeration mitigation and leaking 500s on unknown emails.
+        compare_hash = user.hashed_password if user else _DUMMY_PASSWORD_HASH
 
         # ── Account state checks ───────────────────────────────────────────
         if user is not None and not user.is_active:

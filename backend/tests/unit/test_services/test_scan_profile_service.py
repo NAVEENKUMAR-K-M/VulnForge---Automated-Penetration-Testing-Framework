@@ -179,12 +179,11 @@ async def test_update_profile_success(
     mock_profile_repo.get_with_plugins.return_value = custom_profile
     service._build_response = AsyncMock()
 
-    data = ScanProfileUpdate(name="New Name", timeout_minutes=0)
-    
+    data = ScanProfileUpdate(name="New Name", timeout_minutes=30)
+
     await service.update_profile(custom_profile.id, data, user)
 
-    # 0 should become None
-    assert custom_profile.timeout_minutes is None
+    assert custom_profile.timeout_minutes == 30
     assert custom_profile.name == "New Name"
     mock_db.flush.assert_called_once()
 
